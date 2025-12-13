@@ -1,0 +1,69 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
+package frc.robot;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import static edu.wpi.first.wpilibj2.command.Commands.*;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.subsystems.Drive;
+import frc.robot.subsystems.PhotonTest;
+import frc.robot.utils.Telemetry;
+
+import static frc.robot.utils.Constants.DriveConstants.k_maxlinspeed;
+import static frc.robot.utils.Constants.OIConstants.*;
+
+public class RobotContainer {
+
+  private final CommandXboxController m_joystick = new CommandXboxController(k_joystickport);
+  private final Drive m_drive = new Drive();
+  private final PhotonTest m_photon = new PhotonTest();
+  private final Telemetry m_telemetry = new Telemetry(m_drive, m_photon);
+
+  private final SendableChooser<Command> m_autochooser = new SendableChooser<>();
+
+  private final Pose2d target_pose = new Pose2d(2, 2, new Rotation2d());
+
+  public RobotContainer() {
+    configureBindings();
+
+    m_drive.setDefaultCommand(new RunCommand(() -> {
+      m_drive.driveArcade(
+        MathUtil.applyDeadband(-m_joystick.getLeftY(), 0.2) * k_maxlinspeedteleop,
+        MathUtil.applyDeadband(-m_joystick.getRightX(), 0.2) * k_maxrotspeedteleop
+      );
+    }, this.m_drive));
+
+    m_photon.setDefaultCommand(new RunCommand(() -> {
+      // m_drive.addVisionMeasurement(m_photon.getEstimate());
+      m_photon.updatePose(m_drive.getPose());
+    }, m_photon));
+
+    m_autochooser.setDefaultOption("no auto", print("WARNING: no auto scheduled"));
+    m_autochooser.addOption("auto1", driveForward());
+    SmartDashboard.putData(m_autochooser);
+  }
+
+  private void configureBindings() {
+    m_joystick.a().toggleOnTrue(run(() -> m_drive.driveToPosePID(target_pose), m_drive));
+  }
+
+  public Command getAutonomousCommand() {
+    return m_autochooser.getSelected();
+  }
+
+  public Command driveForward() {
+    return run(() -> m_drive.driveArcade(k_maxlinspeed, 0), m_drive).withTimeout(1);
+  }
+}

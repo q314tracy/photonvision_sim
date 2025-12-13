@@ -1,0 +1,7 @@
+AM14u6 long
+30 inch track width
+6 inch wheels
+2 CIM motors
+Spark Max controllers over PWM channels 1 and 2
+2 quadrature encoders connected to channel 0/1 and 2/3
+quad encoders mounted 1:1 on wheel shaft, no ratio needed
