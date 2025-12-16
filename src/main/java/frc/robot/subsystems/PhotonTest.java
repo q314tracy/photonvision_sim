@@ -15,7 +15,11 @@ import org.photonvision.targeting.PhotonPipelineResult;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -39,27 +43,30 @@ public class PhotonTest extends SubsystemBase {
   private final AprilTagFieldLayout m_fieldlayout = AprilTagFieldLayout
       .loadField(AprilTagFields.k2025ReefscapeAndyMark);
 
-  private Optional<EstimatedRobotPose> camera_estimate = Optional.empty();
-  private Optional<PhotonPipelineResult> camera_results = Optional.empty();
-  private List<Integer> fiducials = new ArrayList<>();
+  // stuff
+  private Optional<EstimatedRobotPose> raw_estimate = Optional.empty();
+  private Optional<PhotonPipelineResult> raw_results = Optional.empty();
+  private Optional<Pair<EstimatedRobotPose, Matrix<N3, N1>>> estimate = Optional.empty();
+  private List<Integer> visible_fiducials = new ArrayList<>();
+
 
   public PhotonTest() {
 
     // camera and pose estimator
-    m_camera = new PhotonCamera("camera 1");
+    m_camera = new PhotonCamera("camera");
     m_camerape = new PhotonPoseEstimator(
         m_fieldlayout,
         PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
         k_camera1_intrinsics);
 
-    // simulation time
+    // IT'S SIMULATING TIME
     if (RobotBase.isSimulation()) {
 
       // declare vision sim
       m_visionsim = new VisionSystemSim("main");
       m_visionsim.addAprilTags(m_fieldlayout);
 
-      // set up camera 1 sim and properties
+      // set up camera sim and properties
       SimCameraProperties camera1sim_properties = new SimCameraProperties();
       camera1sim_properties.setFPS(30);
       m_camerasim = new PhotonCameraSim(m_camera, camera1sim_properties);
@@ -71,42 +78,61 @@ public class PhotonTest extends SubsystemBase {
     }
   }
 
-  public Optional<EstimatedRobotPose> getEstimate() {
-    return camera_estimate;
+
+
+
+  // main functions for estimate and heuristics
+
+  /** Returns the most recent estimate, with standard deviations based on heuristics. Still a WIP. */
+  public Optional<Pair<EstimatedRobotPose, Matrix<N3, N1>>> getEstimateWithStdDevs() {
+    estimate = Optional.empty();
+    raw_estimate.ifPresent(est -> {
+      estimate = Optional
+          .of(new Pair<EstimatedRobotPose, Matrix<N3, N1>>(est, calculateStdDevs(est)));
+    });
+    return estimate;
   }
 
-  public Optional<PhotonPipelineResult> getResults() {
-    return camera_results;
+  /** Calculates the appropriate standard deviations for the passed estimate. Still a WIP. */
+  public Matrix<N3, N1> calculateStdDevs(EstimatedRobotPose est) {
+    Matrix<N3, N1> stddevs = k_stdDevs_ignore;
+    return stddevs;
   }
 
+  
+
+
+
+
+
+  // functions used in simulation and testing
+
+  /** Used to update visible fiducials in Telemetry. */
   public List<Integer> getFiducials() {
-    // return fiducials.stream().mapToInt(Integer::intValue).toArray();
-    return fiducials;
+    raw_results.ifPresent(result -> {
+      visible_fiducials.clear();
+      for (var fiducial : result.targets) {
+        visible_fiducials.add(fiducial.fiducialId);
+      }
+    });
+    return visible_fiducials;
   }
 
-  // need to update periodically
+  /** Used to update the pose of the vision sim periodically. */
   public void updatePose(Pose2d pose) {
     m_visionsim.update(pose);
   }
 
+
+
+
   @Override
   public void periodic() {
 
-    // update estimate result
-    camera_estimate = Optional.empty();
-    camera_results = Optional.empty();
-    for (var change : m_camera.getAllUnreadResults()) {
-      camera_results = Optional.of(change);
-      camera_estimate = m_camerape.update(change);
+    // empty and update
+    raw_results = Optional.empty();
+    for (var results : m_camera.getAllUnreadResults()) {
+      raw_results = Optional.of(results);
     }
-
-    // check results and get fiducial ids in a list
-
-    getResults().ifPresent(result -> {
-      fiducials.clear();
-      for (var fiducial : result.targets) {
-        fiducials.add(fiducial.fiducialId);
-      }
-    });
   }
 }

@@ -76,7 +76,9 @@ public class Constants {
             )
         );
 
-        public static final Matrix<N3,N1> k_stdDevssingletag = VecBuilder.fill(4, 4, 99999);
-        public static final Matrix<N3,N1> k_stdDevsmultitag = VecBuilder.fill(0.5, 0.5, 99999);
+        public static final Matrix<N3,N1> k_stdDevs_highfidelity = VecBuilder.fill(0.5, 0.5, 99999);
+        public static final Matrix<N3,N1> k_stdDevs_mediumfidelity = VecBuilder.fill(2, 2, 99999);
+        public static final Matrix<N3,N1> k_stdDevs_lowfidelity = VecBuilder.fill(4, 4, 99999);
+        public static final Matrix<N3,N1> k_stdDevs_ignore = VecBuilder.fill(99999, 99999, 99999);
     }
 }

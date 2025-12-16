@@ -5,7 +5,6 @@
 package frc.robot.utils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -26,7 +25,6 @@ public class Telemetry extends SubsystemBase {
 
   private final Field2d m_field;
   private final AprilTagFieldLayout m_taglayout;
-  private final FieldObject2d m_odometrypose;
   private final FieldObject2d m_visionpose;
 
   private List<Integer> displayed_tags = new ArrayList<>();
@@ -38,12 +36,12 @@ public class Telemetry extends SubsystemBase {
 
     m_field = new Field2d();
     m_visionpose = m_field.getObject("vision pose");
-    m_odometrypose = m_field.getObject("odometry pose");
     m_taglayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
 
     SmartDashboard.putData(m_field);
   }
 
+  // basically adds and removes fiducials from field2d to visualize visible fiducials
   public void addFiducialstoField(List<Integer> fiducials_list) {
 
     // check if empty
@@ -71,11 +69,11 @@ public class Telemetry extends SubsystemBase {
       }
     }
 
-    //remove said tags from field and display list and clear queue
+    // remove said tags from field and display list and clear queue
     if (removed_tags.size() != 0) {
       // remove tags
       for (var tag : removed_tags) {
-        //"remove" object and remove entry
+        // "remove" object and remove entry
         m_field.getObject("AprilTag " + tag).setPose(new Pose2d(50, 50, new Rotation2d()));
         displayed_tags.remove(displayed_tags.indexOf(tag));
       }
@@ -87,14 +85,15 @@ public class Telemetry extends SubsystemBase {
   public void periodic() {
 
     // update poses
-    m_photon.getEstimate().ifPresent(est -> {
-      m_visionpose.setPose(m_photon.getEstimate().get().estimatedPose.toPose2d());
+    m_field.setRobotPose(m_drive.getPose()); //disable temporarily for tuning
+    m_photon.getEstimateWithStdDevs().ifPresent(est -> {
+      m_visionpose.setPose(est.getFirst().estimatedPose.toPose2d());
     });
-    m_field.setRobotPose(m_drive.getPose());
-
-    // pose fiducial ids
+    
+    // add fiducial ids to visualization
     addFiducialstoField(m_photon.getFiducials());
-    SmartDashboard.putNumberArray("fiducials", m_photon.getFiducials().stream().mapToDouble(i -> i.doubleValue()).toArray());
+    SmartDashboard.putNumberArray("fiducials",
+        m_photon.getFiducials().stream().mapToDouble(i -> i.doubleValue()).toArray());
 
   }
 }
