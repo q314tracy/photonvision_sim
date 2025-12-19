@@ -13,15 +13,16 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.Drive;
-import frc.robot.subsystems.PhotonTest;
+import frc.robot.subsystems.Photon;
 
 public class Telemetry extends SubsystemBase {
 
   private final Drive m_drive;
-  private final PhotonTest m_photon;
+  private final Photon m_photon;
 
   private final Field2d m_field;
   private final AprilTagFieldLayout m_taglayout;
@@ -30,18 +31,33 @@ public class Telemetry extends SubsystemBase {
   private List<Integer> displayed_tags = new ArrayList<>();
   private List<Integer> removed_tags = new ArrayList<>();
 
-  public Telemetry(Drive drive, PhotonTest photon) {
+  private final SendableChooser<Boolean> m_tagenable = new SendableChooser<>();
+  private final SendableChooser<Integer> m_tagchooser = new SendableChooser<>();
+  private List<Integer> tagID_blacklist = new ArrayList<>();
+
+  public Telemetry(Drive drive, Photon photon) {
     m_drive = drive;
     m_photon = photon;
 
-    m_field = new Field2d();
-    m_visionpose = m_field.getObject("vision pose");
     m_taglayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
 
+    m_field = new Field2d();
+    m_visionpose = m_field.getObject("vision pose");
     SmartDashboard.putData(m_field);
+
+    // tag blacklist sendable choosers setup
+    m_tagenable.setDefaultOption("Enable Tag", false);
+    m_tagenable.addOption("Disable Tag", true);
+    SmartDashboard.putData(m_tagenable);
+    m_tagchooser.setDefaultOption("Tag# 1", 1);
+    for (int i = 2; i <= 22; i++) {
+      m_tagchooser.addOption("Tag# " + i, i);
+    }
+    SmartDashboard.putData(m_tagchooser);
   }
 
-  // basically adds and removes fiducials from field2d to visualize visible fiducials
+  // basically adds and removes fiducials from field2d to visualize visible
+  // fiducials
   public void addFiducialstoField(List<Integer> fiducials_list) {
 
     // check if empty
@@ -81,19 +97,47 @@ public class Telemetry extends SubsystemBase {
     removed_tags.clear();
   }
 
+
+
+
+
+
+
+  public List<Integer> getBlacklist() {
+    // update current selected tag
+    int tagID = m_tagchooser.getSelected();
+
+    //check if tag enable is active and tag is not currently in list, if yes the add tag ID
+    if (m_tagenable.getSelected() && !tagID_blacklist.contains(tagID)) {
+      tagID_blacklist.add(tagID);
+    }
+
+    // check if tag is slated for removal and is contained within list, if yes, remove tag from list
+    if (!m_tagenable.getSelected() && tagID_blacklist.contains(tagID)) {
+      tagID_blacklist.remove(tagID_blacklist.indexOf(tagID));
+    }
+    //return the list
+    return tagID_blacklist;
+  }
+
+
+
+
+
+
+
   @Override
   public void periodic() {
 
     // update poses
-    m_field.setRobotPose(m_drive.getPose()); //disable temporarily for tuning
-    m_photon.getEstimateWithStdDevs().ifPresent(est -> {
-      m_visionpose.setPose(est.getFirst().estimatedPose.toPose2d());
-    });
-    
+    m_field.setRobotPose(m_drive.getOdometricPose()); // odometric pose
+    m_visionpose.setPose(m_drive.getEstimatedPose()); // vision fused pose
+
     // add fiducial ids to visualization
     addFiducialstoField(m_photon.getFiducials());
     SmartDashboard.putNumberArray("fiducials",
         m_photon.getFiducials().stream().mapToDouble(i -> i.doubleValue()).toArray());
+    SmartDashboard.putNumberArray("Tag Blacklist", getBlacklist().stream().mapToDouble(i -> i.doubleValue()).toArray());
 
   }
 }

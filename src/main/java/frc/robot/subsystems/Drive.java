@@ -4,18 +4,15 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.math.MathUtil;
 // import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
+import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -39,17 +36,13 @@ public class Drive extends SubsystemBase {
   private final Encoder m_rightenc;
   private final ADXRS450_Gyro m_gyro;
   private final DifferentialDriveKinematics m_kinematics;
-  // private final DifferentialDriveOdometry m_odometry;
+  private final DifferentialDriveOdometry m_odometry;
   private final DifferentialDrivePoseEstimator m_poseestimator;
 
   //classes used to sim the hardware
   private final EncoderSim m_leftencsim;
   private final EncoderSim m_rightencsim;
   private final ADXRS450_GyroSim m_gyrosim;
-
-  //PID controllers
-  private final PIDController m_headingPID;
-  private final PIDController m_drivePID;
 
   //differential drive simulation object
   private final DifferentialDrivetrainSim m_drivetrainsim;
@@ -91,28 +84,22 @@ public class Drive extends SubsystemBase {
     m_gyrosim = new ADXRS450_GyroSim(m_gyro);
     m_gyro.reset();
 
-    //pid controller
-    m_headingPID = new PIDController(
-      k_headingPIDkP,
-      0,
-      k_headingPIDkD
-    );
-    m_headingPID.enableContinuousInput(-Math.PI, Math.PI);
-    m_drivePID = new PIDController(
-      k_distancePIDkP,
-      0,
-      k_distancePIDkD
-    );
-
-    //kinematics and odometry
+    //kinematics , odometry, and PE
     m_kinematics = new DifferentialDriveKinematics(k_trackwidth);
-    m_poseestimator = new DifferentialDrivePoseEstimator(
-      m_kinematics,
-      new Rotation2d(Units.degreesToRadians(m_gyro.getAngle())),
+    m_odometry = new DifferentialDriveOdometry(
+      m_gyro.getRotation2d(),
       m_leftenc.getDistance(),
       m_rightenc.getDistance(),
       k_initpose
     );
+    m_poseestimator = new DifferentialDrivePoseEstimator(
+      m_kinematics,
+      m_gyro.getRotation2d(),
+      m_leftenc.getDistance(),
+      m_rightenc.getDistance(),
+      k_initpose
+    );
+
 
     //reset odometry to starting pose on field
     // m_odometry.resetPose(k_initpose);
@@ -172,30 +159,12 @@ public class Drive extends SubsystemBase {
 
 
 
-  
-
-  public void driveToPosePID(Pose2d pose) {
-    double distance = pose.getTranslation().getDistance(m_poseestimator.getEstimatedPosition().getTranslation());
-    Rotation2d angle = pose.getTranslation().minus(m_poseestimator.getEstimatedPosition().getTranslation()).getAngle();
-    Rotation2d heading = new Rotation2d(MathUtil.angleModulus(m_gyro.getRotation2d().getRadians()));
-    double deltacos = Math.abs(angle.minus(heading).getRadians()) < 0.5 * Math.PI ? angle.minus(heading).getCos() : 0;
-
-    if (distance > 0.25) {
-      driveArcade(
-      MathUtil.clamp(m_drivePID.calculate(0, distance), 0, 3) * deltacos,
-      m_headingPID.calculate(heading.getRadians(), angle.getRadians()));
-    }
-  }
-
-
-
-
 
   public void addVisionMeasurement(Optional<EstimatedRobotPose> estimate) {
 
     //check if estimate is present
     estimate.ifPresent(est -> {
-      // m_odometrype.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds);
+      m_poseestimator.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds);
       }
     );
   }
@@ -204,8 +173,12 @@ public class Drive extends SubsystemBase {
 
 
 
-  public Pose2d getPose() {
+  public Pose2d getEstimatedPose() {
     return m_poseestimator.getEstimatedPosition();
+  }
+
+  public Pose2d getOdometricPose() {
+    return m_odometry.getPoseMeters();
   }
 
 
@@ -216,8 +189,15 @@ public class Drive extends SubsystemBase {
   @Override
   public void periodic() {
 
-    //update the odometry
+    //update the PE
     m_poseestimator.update(
+      m_gyro.getRotation2d(),
+      m_leftenc.getDistance(),
+      m_rightenc.getDistance()
+    );
+
+    //update the odometry
+    m_odometry.update(
       m_gyro.getRotation2d(),
       m_leftenc.getDistance(),
       m_rightenc.getDistance()
