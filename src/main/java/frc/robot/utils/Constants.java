@@ -6,7 +6,6 @@ package frc.robot.utils;
 
 import static frc.robot.utils.Constants.DriveConstants.k_maxlinspeed;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -70,22 +69,31 @@ public class Constants {
     }
 
     public class VisionConstants {
-        public static final Transform3d k_camera1_intrinsics = new Transform3d(
-                0,
+        public static final Transform3d k_cameraleft_intrinsics = new Transform3d(
+                Units.inchesToMeters(12),
+                Units.inchesToMeters(12),
                 Units.inchesToMeters(8),
-                Units.inchesToMeters(6),
                 new Rotation3d(
                         0,
                         0,
-                        0));
+                        Units.degreesToRadians(30)));
+        public static final Transform3d k_cameraright_intrinsics = new Transform3d(
+                Units.inchesToMeters(12),
+                Units.inchesToMeters(-12),
+                Units.inchesToMeters(8),
+                new Rotation3d(
+                        0,
+                        0,
+                        Units.degreesToRadians(-30)));
 
         public static final AprilTagFieldLayout k_fieldlayout = AprilTagFieldLayout
                 .loadField(AprilTagFields.k2025ReefscapeAndyMark);
 
         public static final List<Integer> k_tagblacklist = Arrays.asList(3, 16);
-        
+
         public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(2, 2, 99999);
         public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.1, 0.1, 99999);
-        public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+        public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE,
+                Double.MAX_VALUE);
     }
 }

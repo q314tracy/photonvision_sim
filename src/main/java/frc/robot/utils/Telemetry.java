@@ -5,6 +5,7 @@
 package frc.robot.utils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -30,6 +31,8 @@ public class Telemetry extends SubsystemBase {
   private List<Integer> displayed_tags = new ArrayList<>();
   private List<Integer> removed_tags = new ArrayList<>();
 
+  private HashSet<Integer> visible_fiducials = new HashSet<>();
+
   public Telemetry(Drive drive, Photon photon) {
     m_drive = drive;
     m_photon = photon;
@@ -41,9 +44,7 @@ public class Telemetry extends SubsystemBase {
     SmartDashboard.putData(m_field);
   }
 
-  // basically adds and removes fiducials from field2d to visualize visible
-  // fiducials
-  public void addFiducialstoField(List<Integer> fiducials_list) {
+  public void addFiducialstoField(HashSet<Integer> fiducials_list) {
 
     // check if empty
     if (fiducials_list.size() > 0) {
@@ -83,14 +84,6 @@ public class Telemetry extends SubsystemBase {
   }
 
 
-
-
-
-
-
-
-
-
   @Override
   public void periodic() {
 
@@ -99,12 +92,15 @@ public class Telemetry extends SubsystemBase {
     m_visionpose.setPose(m_drive.getEstimatedPose()); // vision fused pose
 
     // add fiducial ids to visualization
-    addFiducialstoField(m_photon.getFiducials());
-    SmartDashboard.putNumberArray("fiducials",
-        m_photon.getFiducials().stream().mapToDouble(i -> i.doubleValue()).toArray());
+    visible_fiducials.clear();
+    visible_fiducials.addAll(m_photon.getFiducials(m_photon.getLeftResults()));
+    visible_fiducials.addAll(m_photon.getFiducials(m_photon.getRightResults()));
+    addFiducialstoField(visible_fiducials);
+    SmartDashboard.putNumberArray("visible ficuials", visible_fiducials.stream().mapToDouble(i -> i.doubleValue()).toArray());
 
-    // post fiducial distances and yaws
-    SmartDashboard.putNumberArray("target yaws", m_photon.getTargetYaws().stream().mapToDouble(i -> i).toArray());
-    SmartDashboard.putNumberArray("target distances", m_photon.getTargetDistances().stream().mapToDouble(i -> i).toArray());
+    SmartDashboard.putNumberArray("left fiducials",
+        m_photon.getFiducials(m_photon.getLeftResults()).stream().mapToDouble(i -> i.doubleValue()).toArray());
+    SmartDashboard.putNumberArray("right fiducials",
+        m_photon.getFiducials(m_photon.getRightResults()).stream().mapToDouble(i -> i.doubleValue()).toArray());
   }
 }

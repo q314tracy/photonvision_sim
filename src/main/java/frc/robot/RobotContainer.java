@@ -14,20 +14,22 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Photon;
 import frc.robot.utils.Telemetry;
-
-import static frc.robot.utils.Constants.DriveConstants.k_maxlinspeed;
 import static frc.robot.utils.Constants.OIConstants.*;
 
 public class RobotContainer {
 
+  // objects
   private final CommandXboxController m_joystick = new CommandXboxController(k_joystickport);
   private final Drive m_drive = new Drive();
   private final Photon m_photon = new Photon();
   private final Telemetry m_telemetry = new Telemetry(m_drive, m_photon);
 
+  // autochooser
   private final SendableChooser<Command> m_autochooser = new SendableChooser<>();
 
   public RobotContainer() {
+
+    // configure trigger bindings
     configureBindings();
 
     // void default method for drive subsystem
@@ -40,13 +42,12 @@ public class RobotContainer {
 
     //void to run continuously for photon, do not interrupt
     m_photon.setDefaultCommand(new RunCommand(() -> {
-      m_drive.addVisionMeasurement(m_photon.getEstimate());
+      m_drive.addVisionMeasurement(m_photon.getEstimates());
       m_photon.updatePose(m_drive.getOdometricPose());
     }, m_photon));
 
     // autochooser
     m_autochooser.setDefaultOption("no auto", print("WARNING: no auto scheduled"));
-    m_autochooser.addOption("auto1", driveForward());
     SmartDashboard.putData(m_autochooser);
   }
 
@@ -56,9 +57,5 @@ public class RobotContainer {
 
   public Command getAutonomousCommand() {
     return m_autochooser.getSelected();
-  }
-
-  public Command driveForward() {
-    return run(() -> m_drive.driveArcade(k_maxlinspeed, 0), m_drive).withTimeout(1);
   }
 }

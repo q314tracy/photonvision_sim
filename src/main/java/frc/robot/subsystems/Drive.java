@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.simulation.EncoderSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import static frc.robot.utils.Constants.DriveConstants.*;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
@@ -164,15 +165,15 @@ public class Drive extends SubsystemBase {
 
 
 
-  public void addVisionMeasurement(Optional<Pair<EstimatedRobotPose,Matrix<N3,N1>>> estimate) {
-    //check if estimate is present and update
-    estimate.ifPresent(est -> {
-      m_poseestimator.addVisionMeasurement(
-        est.getFirst().estimatedPose.toPose2d(),
-        est.getFirst().timestampSeconds,
-        est.getSecond());
+  public void addVisionMeasurement(List<Optional<EstimatedRobotPose>> estimates) {
+    //check if estimates are present, iterate on list and add measurements
+    if (!estimates.isEmpty()) {
+      for (var estimate : estimates) {
+        estimate.ifPresent(est -> {
+          m_poseestimator.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds);
+        });
       }
-    );
+    }
   }
 
 
