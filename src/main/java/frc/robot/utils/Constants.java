@@ -6,6 +6,10 @@ package frc.robot.utils;
 
 import static frc.robot.utils.Constants.DriveConstants.k_maxlinspeed;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
@@ -78,8 +82,10 @@ public class Constants {
         public static final AprilTagFieldLayout k_fieldlayout = AprilTagFieldLayout
                 .loadField(AprilTagFields.k2025ReefscapeAndyMark);
 
-        public static final Matrix<N3, N1> k_stdDevs_highfidelity = VecBuilder.fill(0.5, 0.5, 99999);
-        public static final Matrix<N3, N1> k_stdDevs_mediumfidelity = VecBuilder.fill(2, 2, 99999);
-        public static final Matrix<N3, N1> k_stdDevs_lowfidelity = VecBuilder.fill(4, 4, 99999);
+        public static final List<Integer> k_tagblacklist = Arrays.asList(3, 16);
+        
+        public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(2, 2, 99999);
+        public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.1, 0.1, 99999);
+        public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
     }
 }

@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Pair;
 // import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -11,6 +13,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
@@ -160,11 +164,13 @@ public class Drive extends SubsystemBase {
 
 
 
-  public void addVisionMeasurement(Optional<EstimatedRobotPose> estimate) {
-
-    //check if estimate is present
+  public void addVisionMeasurement(Optional<Pair<EstimatedRobotPose,Matrix<N3,N1>>> estimate) {
+    //check if estimate is present and update
     estimate.ifPresent(est -> {
-      m_poseestimator.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds);
+      m_poseestimator.addVisionMeasurement(
+        est.getFirst().estimatedPose.toPose2d(),
+        est.getFirst().timestampSeconds,
+        est.getSecond());
       }
     );
   }

@@ -13,7 +13,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.Drive;
@@ -31,10 +30,6 @@ public class Telemetry extends SubsystemBase {
   private List<Integer> displayed_tags = new ArrayList<>();
   private List<Integer> removed_tags = new ArrayList<>();
 
-  private final SendableChooser<Boolean> m_tagenable = new SendableChooser<>();
-  private final SendableChooser<Integer> m_tagchooser = new SendableChooser<>();
-  private List<Integer> tagID_blacklist = new ArrayList<>();
-
   public Telemetry(Drive drive, Photon photon) {
     m_drive = drive;
     m_photon = photon;
@@ -44,16 +39,6 @@ public class Telemetry extends SubsystemBase {
     m_field = new Field2d();
     m_visionpose = m_field.getObject("vision pose");
     SmartDashboard.putData(m_field);
-
-    // tag blacklist sendable choosers setup
-    m_tagenable.setDefaultOption("Enable Tag", false);
-    m_tagenable.addOption("Disable Tag", true);
-    SmartDashboard.putData(m_tagenable);
-    m_tagchooser.setDefaultOption("Tag# 1", 1);
-    for (int i = 2; i <= 22; i++) {
-      m_tagchooser.addOption("Tag# " + i, i);
-    }
-    SmartDashboard.putData(m_tagchooser);
   }
 
   // basically adds and removes fiducials from field2d to visualize visible
@@ -103,26 +88,6 @@ public class Telemetry extends SubsystemBase {
 
 
 
-  public List<Integer> getBlacklist() {
-    // update current selected tag
-    int tagID = m_tagchooser.getSelected();
-
-    //check if tag enable is active and tag is not currently in list, if yes the add tag ID
-    if (m_tagenable.getSelected() && !tagID_blacklist.contains(tagID)) {
-      tagID_blacklist.add(tagID);
-    }
-
-    // check if tag is slated for removal and is contained within list, if yes, remove tag from list
-    if (!m_tagenable.getSelected() && tagID_blacklist.contains(tagID)) {
-      tagID_blacklist.remove(tagID_blacklist.indexOf(tagID));
-    }
-    //return the list
-    return tagID_blacklist;
-  }
-
-
-
-
 
 
 
@@ -137,7 +102,9 @@ public class Telemetry extends SubsystemBase {
     addFiducialstoField(m_photon.getFiducials());
     SmartDashboard.putNumberArray("fiducials",
         m_photon.getFiducials().stream().mapToDouble(i -> i.doubleValue()).toArray());
-    SmartDashboard.putNumberArray("Tag Blacklist", getBlacklist().stream().mapToDouble(i -> i.doubleValue()).toArray());
 
+    // post fiducial distances and yaws
+    SmartDashboard.putNumberArray("target yaws", m_photon.getTargetYaws().stream().mapToDouble(i -> i).toArray());
+    SmartDashboard.putNumberArray("target distances", m_photon.getTargetDistances().stream().mapToDouble(i -> i).toArray());
   }
 }

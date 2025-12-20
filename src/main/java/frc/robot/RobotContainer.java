@@ -42,7 +42,6 @@ public class RobotContainer {
     m_photon.setDefaultCommand(new RunCommand(() -> {
       m_drive.addVisionMeasurement(m_photon.getEstimate());
       m_photon.updatePose(m_drive.getOdometricPose());
-      m_photon.updateBlacklist(m_telemetry.getBlacklist());
     }, m_photon));
 
     // autochooser
