@@ -31,7 +31,6 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class VisionCamera extends SubsystemBase {
@@ -106,7 +105,8 @@ public class VisionCamera extends SubsystemBase {
 
     // heuristic logic
     if (numTags > 1) {
-      stddevs = k_multitagstddevs.times((Math.pow(Math.abs(avgAngle), 2) / 30) * (Math.pow(avgDist, 2) / 30));
+      // stddevs = k_multitagstddevs.times((Math.pow(Math.abs(avgAngle), 2) / 30) * (Math.pow(avgDist, 2) / 30));
+      stddevs = k_multitagstddevs;
     }
     else if (numTags == 1)
       stddevs = k_singletagstddevs;

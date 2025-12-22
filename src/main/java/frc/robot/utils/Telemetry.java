@@ -5,7 +5,6 @@
 package frc.robot.utils;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -42,7 +41,7 @@ public class Telemetry extends SubsystemBase {
     SmartDashboard.putData(m_field);
   }
 
-  public void addFiducialstoField(HashSet<Integer> fiducials) {
+  public void addFiducialstoField(List<Integer> fiducials) {
 
     // check if empty
     if (fiducials.size() > 0) {
@@ -91,6 +90,6 @@ public class Telemetry extends SubsystemBase {
 
     // add fiducial ids to visualization
     addFiducialstoField(m_photon.getAllFiducials());
-    // SmartDashboard.putNumberArray("visible ficuials", visible_fiducials.stream().mapToDouble(i -> i.doubleValue()).toArray());
+    SmartDashboard.putNumberArray("visible ficuials", m_photon.getAllFiducials().stream().mapToDouble(i -> i.doubleValue()).toArray());
   }
 }

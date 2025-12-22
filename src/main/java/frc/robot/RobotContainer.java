@@ -43,7 +43,7 @@ public class RobotContainer {
     //void to run continuously for photon, do not interrupt
     m_photon.setDefaultCommand(new RunCommand(() -> {
       m_drive.addVisionMeasurement(m_photon.getEstimates());
-      m_photon.updatePose(m_drive.getOdometricPose());
+      m_photon.updatePose(m_drive.getEstimatedPose());
     }, m_photon));
 
     // autochooser

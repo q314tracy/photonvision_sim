@@ -17,7 +17,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import static frc.robot.utils.Constants.VisionConstants.*;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +43,7 @@ public class Photon extends SubsystemBase {
     // IT'S SIMULATIN TIME
     if (RobotBase.isSimulation()) {
 
-      // declare vision sim and add cameras
+      // declare vision sim, add cameras, add fiducials
       m_visionsim = new VisionSystemSim("main");
       m_visionsim.addCamera(m_leftcamera.getSimInstance(), k_cameraleft_intrinsics);
       m_visionsim.addCamera(m_centercamera.getSimInstance(), k_cameracenter_intrinsics);
@@ -54,8 +53,20 @@ public class Photon extends SubsystemBase {
     }
   }
 
-  /** Use to return a HashSet containing all  */
-  public HashSet<Integer> getAllFiducials() {
+  /** Get a list of all of the estimates from the camera pipelines. */
+  public List<Pair<Optional<EstimatedRobotPose>,Matrix<N3,N1>>> getEstimates() {
+    return List.of(
+      m_leftcamera.getEstimate(),
+      m_centercamera.getEstimate(),
+      m_rightcamera.getEstimate(),
+      m_rearcamera.getEstimate()
+    );
+  }
+
+  
+
+  /** Returns a list containing all the visible fiducial IDs. */
+  public List<Integer> getAllFiducials() {
 
     // compose the set of fiducials
     // using a hashset automatically removes duplicate entries
@@ -66,7 +77,7 @@ public class Photon extends SubsystemBase {
     set.addAll(m_rearcamera.getFiducials());
 
     // return the composed set converted back to a list
-    return set;
+    return set.stream().toList();
   }
 
   /**
@@ -76,7 +87,9 @@ public class Photon extends SubsystemBase {
    * @param pose The odometric pose of the robot.
    */
   public void updatePose(Pose2d pose) {
-    m_visionsim.update(pose);
+    if (RobotBase.isSimulation()) {
+      m_visionsim.update(pose);
+    }
   }
 
   @Override
