@@ -69,16 +69,6 @@ public class Photon extends SubsystemBase {
     return set;
   }
 
-  /** Returns the list of estimates from the camera pipelines. */
-  public List<Pair<Optional<EstimatedRobotPose>,Matrix<N3,N1>>> getEstimates() {
-    return Arrays.asList(
-      m_leftcamera.getEstimate(),
-      m_centercamera.getEstimate(),
-      m_rightcamera.getEstimate(),
-      m_rearcamera.getEstimate()
-    );
-  }
-
   /**
    * Used to update the pose of the vision sim periodically.
    * Possibly not necessary when real. Testing required.
