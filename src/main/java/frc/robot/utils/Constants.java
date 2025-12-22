@@ -76,7 +76,15 @@ public class Constants {
                 new Rotation3d(
                         0,
                         0,
-                        Units.degreesToRadians(30)));
+                        Units.degreesToRadians(45)));
+        public static final Transform3d k_cameracenter_intrinsics = new Transform3d(
+                Units.inchesToMeters(12),
+                0,
+                Units.inchesToMeters(8),
+                new Rotation3d(
+                        0,
+                        0,
+                        0));
         public static final Transform3d k_cameraright_intrinsics = new Transform3d(
                 Units.inchesToMeters(12),
                 Units.inchesToMeters(-12),
@@ -84,7 +92,15 @@ public class Constants {
                 new Rotation3d(
                         0,
                         0,
-                        Units.degreesToRadians(-30)));
+                        Units.degreesToRadians(-45)));
+        public static final Transform3d k_camerarear_intrinsics = new Transform3d(
+                Units.inchesToMeters(-12),
+                0,
+                Units.inchesToMeters(8),
+                new Rotation3d(
+                        0,
+                        0,
+                        Units.degreesToRadians(180)));
 
         public static final AprilTagFieldLayout k_fieldlayout = AprilTagFieldLayout
                 .loadField(AprilTagFields.k2025ReefscapeAndyMark);
@@ -92,7 +108,7 @@ public class Constants {
         public static final List<Integer> k_tagblacklist = Arrays.asList(3, 16);
 
         public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(2, 2, Double.MAX_VALUE);
-        public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.5, 0.5, Double.MAX_VALUE);
+        public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.4, 0.4, Double.MAX_VALUE);
         public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE,
                 Double.MAX_VALUE);
     }
