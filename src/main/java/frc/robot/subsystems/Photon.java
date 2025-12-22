@@ -13,7 +13,13 @@ import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -21,7 +27,6 @@ import static frc.robot.utils.Constants.VisionConstants.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,12 +47,9 @@ public class Photon extends SubsystemBase {
   private Optional<PhotonPipelineResult> cameraleft_results = Optional.empty();
   private Optional<PhotonPipelineResult> cameraright_results = Optional.empty();
 
-  // the estimates wrapped in optionals to limit NPEs
-  private Optional<EstimatedRobotPose> cameraleft_estimate = Optional.empty();
-  private Optional<EstimatedRobotPose> cameraright_estimate = Optional.empty();
-
-  // visible fiducials list
-  private HashSet<Integer> visible_fiducials_all = new HashSet<>();
+  // the estimates and std devs composed as one datatype
+  private Pair<Optional<EstimatedRobotPose>,Matrix<N3,N1>> cameraleft_estimate = Pair.of(Optional.empty(), k_ignorestddevs);
+  private Pair<Optional<EstimatedRobotPose>,Matrix<N3,N1>> cameraright_estimate = Pair.of(Optional.empty(), k_ignorestddevs);
 
   public Photon() {
 
@@ -135,16 +137,15 @@ public class Photon extends SubsystemBase {
 
 
 
-  /** Get the estimates in list format.
-   * 
-   * @return
-   */
-  public List<Optional<EstimatedRobotPose>> getEstimates() {
+
+
+  public List<Pair<Optional<EstimatedRobotPose>,Matrix<N3,N1>>> getEstimatesWithStdDevs() {
     return Arrays.asList(
       cameraleft_estimate,
       cameraright_estimate
     );
-  }
+  };
+
 
 
 
@@ -165,6 +166,37 @@ public class Photon extends SubsystemBase {
 
 
 
+  public Matrix<N3,N1> calculateStdDevs(EstimatedRobotPose estimate, PhotonPipelineResult result) {
+
+    // zero out vars to recalculate avg distance and std devs
+    double avgDist = 0;
+    int numTags = 0;
+    Matrix<N3,N1> stddevs = k_ignorestddevs;
+
+    // iterate on target list to average distances to targets
+    for (var target : result.targets) {
+      avgDist += 
+        AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark)
+          .getTagPose(target.fiducialId)
+          .get()
+          .toPose2d()
+          .getTranslation()
+          .getDistance(estimate.estimatedPose.toPose2d().getTranslation());
+      numTags++;
+    }
+    avgDist /= numTags;
+
+    // heuristic logic
+    if (numTags > 1) stddevs = k_multitagstddevs.times(Math.pow(avgDist, 2) / 30);
+    // if (numTags > 1 && avgDist < 8) stddevs = k_multitagstddevs;
+    else if (numTags == 1) stddevs = k_singletagstddevs;
+    else stddevs = k_ignorestddevs;
+    
+    // return the composed std devs
+    return stddevs;
+  }
+
+
 
 
 
@@ -180,12 +212,19 @@ public class Photon extends SubsystemBase {
       cameraright_results = Optional.of(result);
     }
 
-    // clear estimates and update them
-    cameraleft_results.ifPresentOrElse(res -> {
-      cameraleft_estimate = m_cameraleft_estimator.update(res);
-    }, () -> cameraleft_estimate = Optional.empty());
-    cameraright_results.ifPresentOrElse(res -> {
-      cameraright_estimate = m_cameraright_estimator.update(res);
-    }, () -> cameraright_estimate = Optional.empty());
+    // check if results are present for each camera, if yes, perform heuristics and compose estimate
+    cameraleft_results.ifPresentOrElse(result -> {
+      Optional<EstimatedRobotPose> estimate = m_cameraleft_estimator.update(result);
+      estimate.ifPresent(est -> {
+        cameraleft_estimate = Pair.of(Optional.of(est), calculateStdDevs(est, result));
+      });
+    }, () -> cameraleft_estimate = Pair.of(Optional.empty(), k_ignorestddevs)); // empty estimate and set stddevs to ignore
+    cameraright_results.ifPresentOrElse(result -> {
+      Optional<EstimatedRobotPose> estimate = m_cameraright_estimator.update(result);
+      estimate.ifPresent(est -> {
+        cameraright_estimate = Pair.of(Optional.of(est), calculateStdDevs(est, result));
+        // cameraright_estimate = Pair.of(Optional.of(est), k_ignorestddevs);
+      });
+    }, () -> cameraright_estimate = Pair.of(Optional.empty(), k_ignorestddevs)); // empty estimate and set stddevs to ignore
   }
 }

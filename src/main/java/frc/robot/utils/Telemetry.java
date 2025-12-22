@@ -96,11 +96,11 @@ public class Telemetry extends SubsystemBase {
     visible_fiducials.addAll(m_photon.getFiducials(m_photon.getLeftResults()));
     visible_fiducials.addAll(m_photon.getFiducials(m_photon.getRightResults()));
     addFiducialstoField(visible_fiducials);
-    SmartDashboard.putNumberArray("visible ficuials", visible_fiducials.stream().mapToDouble(i -> i.doubleValue()).toArray());
+    // SmartDashboard.putNumberArray("visible ficuials", visible_fiducials.stream().mapToDouble(i -> i.doubleValue()).toArray());
 
-    SmartDashboard.putNumberArray("left fiducials",
-        m_photon.getFiducials(m_photon.getLeftResults()).stream().mapToDouble(i -> i.doubleValue()).toArray());
-    SmartDashboard.putNumberArray("right fiducials",
-        m_photon.getFiducials(m_photon.getRightResults()).stream().mapToDouble(i -> i.doubleValue()).toArray());
+    // SmartDashboard.putNumberArray("left fiducials",
+    //     m_photon.getFiducials(m_photon.getLeftResults()).stream().mapToDouble(i -> i.doubleValue()).toArray());
+    // SmartDashboard.putNumberArray("right fiducials",
+    //     m_photon.getFiducials(m_photon.getRightResults()).stream().mapToDouble(i -> i.doubleValue()).toArray());
   }
 }
