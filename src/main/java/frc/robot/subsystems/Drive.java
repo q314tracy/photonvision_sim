@@ -103,8 +103,6 @@ public class Drive extends SubsystemBase {
       e.printStackTrace();
     }
 
-    runAutoBuilder();
-
     // simulation stuff
     if (RobotBase.isSimulation()) {
 
@@ -122,7 +120,8 @@ public class Drive extends SubsystemBase {
       m_odometrysim = new DifferentialDriveOdometry(
           m_gyro.getRotation2d(),
           m_leftenc.getDistance(),
-          m_rightenc.getDistance());
+          m_rightenc.getDistance(),
+          k_initpose);
     }
 
     // init sim encoders

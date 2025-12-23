@@ -11,6 +11,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
@@ -92,6 +93,9 @@ public class Telemetry extends SubsystemBase {
 
     // update vision pose on field
     m_visionpose.setPose(m_drive.getEstimatedPose()); // vision fused pose
+
+    Transform2d pose_deviation = m_drive.getEstimatedPose().minus(m_drive.getSimPose());
+    SmartDashboard.putNumberArray("pose deviation", new double[] {pose_deviation.getX(), pose_deviation.getY()});
 
     // add fiducial ids to visualization
     addFiducialstoField(m_photon.getAllFiducials());

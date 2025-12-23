@@ -107,7 +107,7 @@ public class Constants {
     public static final List<Integer> k_tagblacklist = Arrays.asList(3, 16);
 
     public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(2, 2, Double.MAX_VALUE);
-    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.3, 0.3, Double.MAX_VALUE);
+    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.5, 0.5, Double.MAX_VALUE);
     public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE,
         Double.MAX_VALUE);
   }

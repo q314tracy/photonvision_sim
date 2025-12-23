@@ -21,15 +21,11 @@ import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.targeting.PhotonPipelineResult;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -84,28 +80,12 @@ public class VisionCamera extends SubsystemBase {
   private Matrix<N3, N1> calculateStdDevs(EstimatedRobotPose estimate, PhotonPipelineResult result) {
 
     // zero out vars to recalculate avg distance and std devs
-    double avgDist = 0;
-    double avgAngle = 0;
-    int numTags = 0;
     Matrix<N3, N1> stddevs = k_ignorestddevs;
-
-    // iterate on target list to average distances to targets
-    for (var target : result.targets) {
-      avgDist += AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark)
-          .getTagPose(target.fiducialId)
-          .get()
-          .toPose2d()
-          .getTranslation()
-          .getDistance(estimate.estimatedPose.toPose2d().getTranslation());
-      avgAngle += Units.radiansToDegrees(MathUtil.angleModulus(target.getBestCameraToTarget().getRotation().getZ() - Math.PI));
-      numTags++;
-    }
-    avgDist /= numTags;
-    avgAngle /= numTags;
+    int numTags = result.targets.size();
 
     // heuristic logic
     if (numTags > 1) {
-      stddevs = k_multitagstddevs.times((Math.pow(Math.abs(avgAngle), 2) / 30) * (Math.pow(avgDist, 2) / 30));
+      stddevs = k_multitagstddevs;
     }
     else if (numTags == 1)
       stddevs = k_singletagstddevs;
