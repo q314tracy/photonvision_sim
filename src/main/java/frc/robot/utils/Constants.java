@@ -25,80 +25,90 @@ import edu.wpi.first.math.util.Units;
 /** Add your docs here. */
 public class Constants {
 
-    public class DriveConstants {
-        public static final int k_leftPWMchannel = 0;
-        public static final int k_rightPWMchannel = 1;
-        public static final int[] k_leftENCchannels = new int[] { 0, 1 };
-        public static final int[] k_rightENCchannels = new int[] { 2, 3 };
+  public class DriveConstants {
+    public static final int k_leftPWMchannel = 0;
+    public static final int k_rightPWMchannel = 1;
+    public static final int[] k_leftENCchannels = new int[] { 0, 1 };
+    public static final int[] k_rightENCchannels = new int[] { 2, 3 };
 
-        public static final double k_ENCresolution = 4096; // counts per rev
+    public static final double k_ENCresolution = 4096; // counts per rev
 
-        public static final double k_wheelradius = Units.inchesToMeters(3);
-        public static final double k_wheelcircumference = Units.inchesToMeters(2 * Math.PI * k_wheelradius);
-        public static final double k_trackwidth = Units.inchesToMeters(30);
-        public static final double k_trackcircumference = Math.PI * k_trackwidth;
-        public static final double k_gearratio = 10.71; // ratio of gearboxes
-        public static final double k_NEOmaxspeed = 5676; // max rpm of drive motor
-        public static final double k_maxlinspeed = (5676 / k_gearratio) * (2 * Math.PI * k_wheelradius) / 60; // meters/sec
-        public static final double k_maxrotspeed = (2 * k_maxlinspeed) / k_trackwidth; // rads/sec
-        public static final double k_massKG = Units.lbsToKilograms(45);
-        public static final double k_rotateMOI = 0.5 * k_massKG * Math.pow(k_trackwidth / 2, 2);
+    public static final double k_wheelradius = Units.inchesToMeters(3);
+    public static final double k_wheelcircumference = Units.inchesToMeters(2 * Math.PI * k_wheelradius);
+    public static final double k_trackwidth = Units.inchesToMeters(30);
+    public static final double k_trackcircumference = Math.PI * k_trackwidth;
+    public static final double k_gearratio = 10.71; // ratio of gearboxes
+    public static final double k_NEOmaxspeed = 5676; // max rpm of drive motor
+    public static final double k_maxlinspeed = (5676 / k_gearratio) * (2 * Math.PI * k_wheelradius) / 60; // meters/sec
+    public static final double k_maxrotspeed = (2 * k_maxlinspeed) / k_trackwidth; // rads/sec
+    public static final double k_massKG = Units.lbsToKilograms(45);
+    public static final double k_rotateMOI = 0.5 * k_massKG * Math.pow(k_trackwidth / 2, 2);
 
-        public static final Pose2d k_initpose = new Pose2d(2, 2, new Rotation2d());
+    public static final Pose2d k_initpose = new Pose2d(2, 2, new Rotation2d());
 
-        public static final TrapezoidProfile.Constraints k_headingconstraints = new TrapezoidProfile.Constraints(2 * Math.PI, 4 * Math.PI);
-        public static final TrapezoidProfile.Constraints k_drivingconstraints = new TrapezoidProfile.Constraints(1, 3);
+    public static final TrapezoidProfile.Constraints k_headingconstraints = new TrapezoidProfile.Constraints(
+        2 * Math.PI, 4 * Math.PI);
+    public static final TrapezoidProfile.Constraints k_drivingconstraints = new TrapezoidProfile.Constraints(
+        1, 3);
 
-    }
+  }
 
-    public class OIConstants {
-        public static final int k_joystickport = 0;
-        public static final double k_maxlinspeedteleop = k_maxlinspeed;
-        public static final double k_maxrotspeedteleop = 2 * Math.PI;
-    }
+  public class OIConstants {
+    public static final int k_joystickport = 0;
+    public static final double k_maxlinspeedteleop = k_maxlinspeed;
+    public static final double k_maxrotspeedteleop = 2 * Math.PI;
+  }
 
-    public class VisionConstants {
-        public static final Transform3d k_cameraleft_intrinsics = new Transform3d(
-                Units.inchesToMeters(12),
-                Units.inchesToMeters(12),
-                Units.inchesToMeters(8),
-                new Rotation3d(
-                        0,
-                        0,
-                        Units.degreesToRadians(45)));
-        public static final Transform3d k_cameracenter_intrinsics = new Transform3d(
-                Units.inchesToMeters(12),
-                0,
-                Units.inchesToMeters(8),
-                new Rotation3d(
-                        0,
-                        0,
-                        0));
-        public static final Transform3d k_cameraright_intrinsics = new Transform3d(
-                Units.inchesToMeters(12),
-                Units.inchesToMeters(-12),
-                Units.inchesToMeters(8),
-                new Rotation3d(
-                        0,
-                        0,
-                        Units.degreesToRadians(-45)));
-        public static final Transform3d k_camerarear_intrinsics = new Transform3d(
-                Units.inchesToMeters(-12),
-                0,
-                Units.inchesToMeters(8),
-                new Rotation3d(
-                        0,
-                        0,
-                        Units.degreesToRadians(180)));
+  public class VisionConstants {
+    public static final Transform3d k_camera_frontleft_intrinsics = new Transform3d(
+        Units.inchesToMeters(12),
+        Units.inchesToMeters(12),
+        Units.inchesToMeters(8),
+        new Rotation3d(
+            0,
+            0,
+            Units.degreesToRadians(45)));
+  public static final Transform3d k_camera_frontcenter_intrinsics = new Transform3d(
+          Units.inchesToMeters(12),
+          0,
+          Units.inchesToMeters(8),
+          new Rotation3d(
+                  0,
+                  0,
+                  0));
+    public static final Transform3d k_camera_frontright_intrinsics = new Transform3d(
+        Units.inchesToMeters(12),
+        Units.inchesToMeters(-12),
+        Units.inchesToMeters(8),
+        new Rotation3d(
+            0,
+            0,
+            Units.degreesToRadians(-45)));
+    public static final Transform3d k_camera_rearleft_intrinsics = new Transform3d(
+        Units.inchesToMeters(-12),
+        Units.inchesToMeters(12),
+        Units.inchesToMeters(8),
+        new Rotation3d(
+            0,
+            0,
+            Units.degreesToRadians(135)));
+    public static final Transform3d k_camera_rearright_intrinsics = new Transform3d(
+        Units.inchesToMeters(-12),
+        Units.inchesToMeters(-12),
+        Units.inchesToMeters(8),
+        new Rotation3d(
+            0,
+            0,
+            Units.degreesToRadians(-135)));
 
-        public static final AprilTagFieldLayout k_fieldlayout = AprilTagFieldLayout
-                .loadField(AprilTagFields.k2025ReefscapeAndyMark);
+    public static final AprilTagFieldLayout k_fieldlayout = AprilTagFieldLayout
+        .loadField(AprilTagFields.k2025ReefscapeAndyMark);
 
-        public static final List<Integer> k_tagblacklist = Arrays.asList(3, 16);
+    public static final List<Integer> k_tagblacklist = Arrays.asList(3, 16);
 
-        public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(2, 2, Double.MAX_VALUE);
-        public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.5, 0.5, Double.MAX_VALUE);
-        public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE,
-                Double.MAX_VALUE);
-    }
+    public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(2, 2, Double.MAX_VALUE);
+    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.3, 0.3, Double.MAX_VALUE);
+    public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE,
+        Double.MAX_VALUE);
+  }
 }

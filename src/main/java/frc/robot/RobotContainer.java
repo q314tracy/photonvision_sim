@@ -5,11 +5,15 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Photon;
@@ -17,6 +21,11 @@ import frc.robot.utils.Telemetry;
 import static frc.robot.utils.Constants.OIConstants.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.pathfinding.LocalADStar;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 
 public class RobotContainer {
 
@@ -29,10 +38,22 @@ public class RobotContainer {
   // autochooser
   private final SendableChooser<Command> m_autochooser = new SendableChooser<>();
 
+  private final SequentialCommandGroup auto_1 = new SequentialCommandGroup(
+    Pathfind(new Pose2d(6, 1, new Rotation2d(Math.PI))),
+    AutoBuilder.buildAuto("Auto 1")
+  );
+
   public RobotContainer() {
 
     // configure trigger bindings
     configureBindings();
+
+    // autobuilder and autos
+    Pathfinding.setPathfinder(new LocalADStar());
+    // m_drive.runAutoBuilder();
+    m_autochooser.setDefaultOption("no auto", print("WARNING: no auto scheduled"));
+    m_autochooser.addOption("Auto 1", auto_1);
+    SmartDashboard.putData(m_autochooser);
 
     // void default method for drive subsystem
     m_drive.setDefaultCommand(new RunCommand(() -> {
@@ -44,18 +65,26 @@ public class RobotContainer {
 
     //void to run continuously for photon, do not interrupt
     m_photon.setDefaultCommand(new RunCommand(() -> {
+      if (RobotBase.isSimulation()) m_photon.updatePose(m_drive.getSimPose());
       m_drive.addVisionMeasurement(m_photon.getEstimates());
-      m_photon.updatePose(m_drive.getOdometricPose());
     }, m_photon));
-
-    // autochooser
-    m_autochooser.setDefaultOption("no auto", print("WARNING: no auto scheduled"));
-    m_autochooser.addOption("Auto 1", AutoBuilder.buildAuto("Auto 1"));
-    SmartDashboard.putData(m_autochooser);
   }
 
   private void configureBindings() {
+    m_joystick.a().onTrue(Pathfind(new Pose2d(6, 1, new Rotation2d(Math.PI))));
+  }
 
+  public Command Pathfind(Pose2d pose) {
+    Command cmd = AutoBuilder.pathfindToPose(
+      pose,
+      new PathConstraints(
+        4,
+        4,
+        2 * Math.PI,
+        4 * Math.PI,
+        12));
+    cmd.addRequirements(m_drive);
+    return cmd;
   }
 
   public Command getAutonomousCommand() {

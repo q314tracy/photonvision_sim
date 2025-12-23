@@ -11,6 +11,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -84,8 +85,12 @@ public class Telemetry extends SubsystemBase {
   @Override
   public void periodic() {
 
-    // update poses
-    m_field.setRobotPose(m_drive.getOdometricPose()); // odometric pose
+    // update sim pose if simulation
+    if (RobotBase.isSimulation()) {
+      m_field.setRobotPose(m_drive.getSimPose()); // odometric pose
+    }
+
+    // update vision pose on field
     m_visionpose.setPose(m_drive.getEstimatedPose()); // vision fused pose
 
     // add fiducial ids to visualization

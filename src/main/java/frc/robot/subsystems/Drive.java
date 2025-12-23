@@ -46,7 +46,6 @@ public class Drive extends SubsystemBase {
   private final Encoder m_rightenc;
   private final ADXRS450_Gyro m_gyro;
   private final DifferentialDriveKinematics m_kinematics;
-  private final DifferentialDriveOdometry m_odometry;
   private final DifferentialDrivePoseEstimator m_poseestimator;
 
   // classes used to sim the hardware
@@ -58,7 +57,8 @@ public class Drive extends SubsystemBase {
   private RobotConfig robotConfig;
 
   // differential drive simulation object
-  private final DifferentialDrivetrainSim m_drivetrainsim;
+  private DifferentialDrivetrainSim m_drivetrainsim;
+  private DifferentialDriveOdometry m_odometrysim;
 
   public Drive() {
 
@@ -78,10 +78,6 @@ public class Drive extends SubsystemBase {
     m_leftenc.setDistancePerPulse((2 * Math.PI * k_wheelradius) / k_ENCresolution);
     m_rightenc.setDistancePerPulse((2 * Math.PI * k_wheelradius) / k_ENCresolution);
 
-    // init sim encoders
-    m_leftencsim = new EncoderSim(m_leftenc);
-    m_rightencsim = new EncoderSim(m_rightenc);
-
     // reset at init
     m_leftenc.reset();
     m_rightenc.reset();
@@ -89,15 +85,10 @@ public class Drive extends SubsystemBase {
     // init and reset gyro
     m_gyro = new ADXRS450_Gyro();
     m_gyrosim = new ADXRS450_GyroSim(m_gyro);
-    m_gyro.reset();
+    m_gyro.calibrate();
 
-    // kinematics , odometry, and PE
+    // kinematics and PE
     m_kinematics = new DifferentialDriveKinematics(k_trackwidth);
-    m_odometry = new DifferentialDriveOdometry(
-        m_gyro.getRotation2d(),
-        m_leftenc.getDistance(),
-        m_rightenc.getDistance(),
-        k_initpose);
     m_poseestimator = new DifferentialDrivePoseEstimator(
         m_kinematics,
         m_gyro.getRotation2d(),
@@ -105,23 +96,38 @@ public class Drive extends SubsystemBase {
         m_rightenc.getDistance(),
         k_initpose);
 
-    // autobuilder and robot config
+    // robot config
     try {
       robotConfig = RobotConfig.fromGUISettings();
     } catch (Exception e) {
       e.printStackTrace();
     }
+
     runAutoBuilder();
 
-    // drivetrain sim object
-    m_drivetrainsim = new DifferentialDrivetrainSim(
-        DCMotor.getNEO(1),
-        DriveConstants.k_gearratio,
-        DriveConstants.k_rotateMOI,
-        DriveConstants.k_massKG,
-        DriveConstants.k_wheelradius,
-        DriveConstants.k_trackwidth,
-        null);
+    // simulation stuff
+    if (RobotBase.isSimulation()) {
+
+      // drivetrain sim object
+      m_drivetrainsim = new DifferentialDrivetrainSim(
+          DCMotor.getNEO(2),
+          DriveConstants.k_gearratio,
+          DriveConstants.k_rotateMOI,
+          DriveConstants.k_massKG,
+          DriveConstants.k_wheelradius,
+          DriveConstants.k_trackwidth,
+          null);
+
+      // drivetrain odometry explicitly for simulation
+      m_odometrysim = new DifferentialDriveOdometry(
+          m_gyro.getRotation2d(),
+          m_leftenc.getDistance(),
+          m_rightenc.getDistance());
+    }
+
+    // init sim encoders
+    m_leftencsim = new EncoderSim(m_leftenc);
+    m_rightencsim = new EncoderSim(m_rightenc);
   }
 
   /**
@@ -169,7 +175,7 @@ public class Drive extends SubsystemBase {
    * @param pose The pose.
    */
   public void resetPose(Pose2d pose) {
-    m_odometry.resetPose(pose);
+    if (RobotBase.isSimulation()) m_odometrysim.resetPose(pose);
     m_poseestimator.resetPose(pose);
   }
 
@@ -195,9 +201,9 @@ public class Drive extends SubsystemBase {
   }
 
   /** Runs the autobuilder at the start of the code. */
-  private void runAutoBuilder() {
+  public void runAutoBuilder() {
     AutoBuilder.configure(
-        this::getOdometricPose, // Robot pose supplier
+        this::getEstimatedPose, // Robot pose supplier
         this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
         this::getChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
         (speeds, feedforwards) -> autoDrive(speeds), // Method that will drive the robot given ROBOT RELATIVE
@@ -227,25 +233,17 @@ public class Drive extends SubsystemBase {
     return m_poseestimator.getEstimatedPosition();
   }
 
-  /** Returns the current measured pose from odometry. */
-  public Pose2d getOdometricPose() {
-    return m_odometry.getPoseMeters();
+  /** Returns the current simulated odometric pose. */
+  public Pose2d getSimPose() {
+    if (RobotBase.isSimulation()) {
+      return m_odometrysim.getPoseMeters();
+    } else {
+      return new Pose2d();
+    }
   }
 
   @Override
   public void periodic() {
-
-    // update the PE
-    m_poseestimator.update(
-        m_gyro.getRotation2d(),
-        m_leftenc.getDistance(),
-        m_rightenc.getDistance());
-
-    // update the odometry
-    m_odometry.update(
-        m_gyro.getRotation2d(),
-        m_leftenc.getDistance(),
-        m_rightenc.getDistance());
 
     // check if simulation, if yes then run block in conditional
     if (RobotBase.isSimulation()) {
@@ -262,8 +260,20 @@ public class Drive extends SubsystemBase {
       m_leftencsim.setDistance(m_drivetrainsim.getLeftPositionMeters());
       m_leftencsim.setRate(m_drivetrainsim.getLeftVelocityMetersPerSecond());
       m_rightencsim.setDistance(m_drivetrainsim.getRightPositionMeters());
-      m_leftencsim.setRate(m_drivetrainsim.getRightVelocityMetersPerSecond());
+      m_rightencsim.setRate(m_drivetrainsim.getRightVelocityMetersPerSecond());
       m_gyrosim.setAngle(-m_drivetrainsim.getHeading().getDegrees());
+
+      // odometry for simulation
+      m_odometrysim.update(
+          m_gyro.getRotation2d(),
+          m_leftenc.getDistance(),
+          m_rightenc.getDistance());
     }
+
+    // update the PE
+    m_poseestimator.update(
+        m_gyro.getRotation2d(),
+        m_leftenc.getDistance(),
+        m_rightenc.getDistance());
   }
 }
