@@ -15,7 +15,6 @@ import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
@@ -95,10 +94,10 @@ public class Drive extends SubsystemBase {
     // kinematics , odometry, and PE
     m_kinematics = new DifferentialDriveKinematics(k_trackwidth);
     m_odometry = new DifferentialDriveOdometry(
-    m_gyro.getRotation2d(),
-    m_leftenc.getDistance(),
-    m_rightenc.getDistance(),
-    k_initpose);
+        m_gyro.getRotation2d(),
+        m_leftenc.getDistance(),
+        m_rightenc.getDistance(),
+        k_initpose);
     m_poseestimator = new DifferentialDrivePoseEstimator(
         m_kinematics,
         m_gyro.getRotation2d(),
@@ -106,26 +105,22 @@ public class Drive extends SubsystemBase {
         m_rightenc.getDistance(),
         k_initpose);
 
+    // autobuilder and robot config
     try {
       robotConfig = RobotConfig.fromGUISettings();
     } catch (Exception e) {
       e.printStackTrace();
     }
-
-    // reset odometry to starting pose on field
-    m_odometry.resetPose(k_initpose);
+    runAutoBuilder();
 
     // drivetrain sim object
     m_drivetrainsim = new DifferentialDrivetrainSim(
-        LinearSystemId.identifyDrivetrainSystem(
-            k_kVlinsim,
-            k_kAlinsim,
-            k_kVrotsim,
-            k_kArotsim),
         DCMotor.getNEO(1),
-        k_gearratio,
-        k_trackwidth,
-        k_wheelradius,
+        DriveConstants.k_gearratio,
+        DriveConstants.k_rotateMOI,
+        DriveConstants.k_massKG,
+        DriveConstants.k_wheelradius,
+        DriveConstants.k_trackwidth,
         null);
   }
 
@@ -147,6 +142,7 @@ public class Drive extends SubsystemBase {
 
   /**
    * Drive in auto mode with ChassisSpeeds.
+   * 
    * @param speeds The robot-relative chassis speeds.
    */
   public void autoDrive(ChassisSpeeds speeds) {
@@ -157,26 +153,29 @@ public class Drive extends SubsystemBase {
 
   /**
    * Returns the current robot-relative chassis speeds.
+   * 
    * @return
    */
   public ChassisSpeeds getChassisSpeeds() {
     return m_kinematics.toChassisSpeeds(
-      new DifferentialDriveWheelSpeeds(
-        m_leftenc.getRate(),
-        m_rightenc.getRate()
-    ));
+        new DifferentialDriveWheelSpeeds(
+            m_leftenc.getRate(),
+            m_rightenc.getRate()));
   }
 
   /**
    * Resets the current pose of the pose estimator.
+   * 
    * @param pose The pose.
    */
-  public void resetPoseEstimator(Pose2d pose) {
+  public void resetPose(Pose2d pose) {
+    m_odometry.resetPose(pose);
     m_poseestimator.resetPose(pose);
   }
 
   /**
    * Adds all of the vision estimates in a list to the pose estimator.
+   * 
    * @param estimates The list of estimates.
    */
   public void addVisionMeasurement(List<Pair<Optional<EstimatedRobotPose>, Matrix<N3, N1>>> estimates) {
@@ -195,10 +194,11 @@ public class Drive extends SubsystemBase {
     }
   }
 
-  public void runAutoBuilder() {
+  /** Runs the autobuilder at the start of the code. */
+  private void runAutoBuilder() {
     AutoBuilder.configure(
-        this::getEstimatedPose, // Robot pose supplier
-        this::resetPoseEstimator, // Method to reset odometry (will be called if your auto has a starting pose)
+        this::getOdometricPose, // Robot pose supplier
+        this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
         this::getChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
         (speeds, feedforwards) -> autoDrive(speeds), // Method that will drive the robot given ROBOT RELATIVE
                                                      // ChassisSpeeds. Also optionally outputs individual module
@@ -222,10 +222,12 @@ public class Drive extends SubsystemBase {
     );
   }
 
+  /** Returns the current estimated pose. */
   public Pose2d getEstimatedPose() {
     return m_poseestimator.getEstimatedPosition();
   }
 
+  /** Returns the current measured pose from odometry. */
   public Pose2d getOdometricPose() {
     return m_odometry.getPoseMeters();
   }
@@ -241,9 +243,9 @@ public class Drive extends SubsystemBase {
 
     // update the odometry
     m_odometry.update(
-    m_gyro.getRotation2d(),
-    m_leftenc.getDistance(),
-    m_rightenc.getDistance());
+        m_gyro.getRotation2d(),
+        m_leftenc.getDistance(),
+        m_rightenc.getDistance());
 
     // check if simulation, if yes then run block in conditional
     if (RobotBase.isSimulation()) {

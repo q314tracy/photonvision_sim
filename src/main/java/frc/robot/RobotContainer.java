@@ -16,6 +16,8 @@ import frc.robot.subsystems.Photon;
 import frc.robot.utils.Telemetry;
 import static frc.robot.utils.Constants.OIConstants.*;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+
 public class RobotContainer {
 
   // objects
@@ -38,16 +40,17 @@ public class RobotContainer {
         MathUtil.applyDeadband(-m_joystick.getLeftY(), 0.2) * k_maxlinspeedteleop,
         MathUtil.applyDeadband(-m_joystick.getRightX(), 0.2) * k_maxrotspeedteleop
       );
-    }, this.m_drive));
+    }, m_drive));
 
     //void to run continuously for photon, do not interrupt
     m_photon.setDefaultCommand(new RunCommand(() -> {
       m_drive.addVisionMeasurement(m_photon.getEstimates());
-      m_photon.updatePose(m_drive.getEstimatedPose());
+      m_photon.updatePose(m_drive.getOdometricPose());
     }, m_photon));
 
     // autochooser
     m_autochooser.setDefaultOption("no auto", print("WARNING: no auto scheduled"));
+    m_autochooser.addOption("Auto 1", AutoBuilder.buildAuto("Auto 1"));
     SmartDashboard.putData(m_autochooser);
   }
 

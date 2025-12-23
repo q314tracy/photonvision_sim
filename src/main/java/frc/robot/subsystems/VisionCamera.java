@@ -105,8 +105,7 @@ public class VisionCamera extends SubsystemBase {
 
     // heuristic logic
     if (numTags > 1) {
-      // stddevs = k_multitagstddevs.times((Math.pow(Math.abs(avgAngle), 2) / 30) * (Math.pow(avgDist, 2) / 30));
-      stddevs = k_multitagstddevs;
+      stddevs = k_multitagstddevs.times((Math.pow(Math.abs(avgAngle), 2) / 30) * (Math.pow(avgDist, 2) / 30));
     }
     else if (numTags == 1)
       stddevs = k_singletagstddevs;
