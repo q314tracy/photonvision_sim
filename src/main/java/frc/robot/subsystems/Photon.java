@@ -36,22 +36,22 @@ public class Photon extends SubsystemBase {
   public Photon() {
 
     // cameras
-    m_frontleft_camera = new VisionCamera("frontleft_camera", k_camera_frontleft_intrinsics);
-    m_frontcenter_camera = new VisionCamera("frontcenter_camera", k_camera_frontcenter_intrinsics);
-    m_frontright_camera = new VisionCamera("frontright_camera", k_camera_frontright_intrinsics);
-    m_rearleft_camera = new VisionCamera("rearleft_camera", k_camera_rearleft_intrinsics);
-    m_rearright_camera = new VisionCamera("rearright_camera", k_camera_rearright_intrinsics);
+    m_frontleft_camera = new VisionCamera("frontleft_camera", k_frontleftcameraintrinsics);
+    m_frontcenter_camera = new VisionCamera("frontcenter_camera", k_frontcentercameraintrinsics);
+    m_frontright_camera = new VisionCamera("frontright_camera", k_frontrightcameraintrinsics);
+    m_rearleft_camera = new VisionCamera("rearleft_camera", k_rearleftcameraintrinsics);
+    m_rearright_camera = new VisionCamera("rearright_camera", k_rearrightcameraintrinsics);
 
     // IT'S SIMULATIN TIME
     if (RobotBase.isSimulation()) {
 
       // declare vision sim, add cameras, add fiducials
       m_visionsim = new VisionSystemSim("main");
-      m_visionsim.addCamera(m_frontleft_camera.getSimInstance(), k_camera_frontleft_intrinsics);
-      m_visionsim.addCamera(m_frontcenter_camera.getSimInstance(), k_camera_frontcenter_intrinsics);
-      m_visionsim.addCamera(m_frontright_camera.getSimInstance(), k_camera_frontright_intrinsics);
-      m_visionsim.addCamera(m_rearleft_camera.getSimInstance(), k_camera_rearleft_intrinsics);
-      m_visionsim.addCamera(m_rearright_camera.getSimInstance(), k_camera_rearright_intrinsics);
+      m_visionsim.addCamera(m_frontleft_camera.getSimInstance(), k_frontleftcameraintrinsics);
+      m_visionsim.addCamera(m_frontcenter_camera.getSimInstance(), k_frontcentercameraintrinsics);
+      m_visionsim.addCamera(m_frontright_camera.getSimInstance(), k_frontrightcameraintrinsics);
+      m_visionsim.addCamera(m_rearleft_camera.getSimInstance(), k_rearleftcameraintrinsics);
+      m_visionsim.addCamera(m_rearright_camera.getSimInstance(), k_rearrightcameraintrinsics);
       m_visionsim.addAprilTags(k_fieldlayout);
     }
   }

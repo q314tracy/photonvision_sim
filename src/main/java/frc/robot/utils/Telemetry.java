@@ -11,36 +11,30 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Photon;
+import frc.robot.subsystems.Swerve;
 
 public class Telemetry extends SubsystemBase {
 
-  private final Drive m_drive;
   private final Photon m_photon;
+  private final Swerve m_swerve;
 
   private final Field2d m_field;
   private final AprilTagFieldLayout m_taglayout;
-  private final FieldObject2d m_visionpose;
 
   private List<Integer> displayed_tags = new ArrayList<>();
   private List<Integer> removed_tags = new ArrayList<>();
 
-  public Telemetry(Drive drive, Photon photon) {
-    m_drive = drive;
+  public Telemetry(Photon photon, Swerve swerve) {
     m_photon = photon;
-
+    m_swerve = swerve;
+    
     m_taglayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
 
-    m_field = new Field2d();
-    m_visionpose = m_field.getObject("vision pose");
-    SmartDashboard.putData(m_field);
+    m_field = m_swerve.getField2d();
   }
 
   public void addFiducialstoField(List<Integer> fiducials) {
@@ -85,18 +79,6 @@ public class Telemetry extends SubsystemBase {
 
   @Override
   public void periodic() {
-
-    // update sim pose if simulation
-    if (RobotBase.isSimulation()) {
-      m_field.setRobotPose(m_drive.getSimPose()); // odometric pose
-    }
-
-    // update vision pose on field
-    m_visionpose.setPose(m_drive.getEstimatedPose()); // vision fused pose
-
-    Transform2d pose_deviation = m_drive.getEstimatedPose().minus(m_drive.getSimPose());
-    SmartDashboard.putNumberArray("pose deviation", new double[] {pose_deviation.getX(), pose_deviation.getY()});
-
     // add fiducial ids to visualization
     addFiducialstoField(m_photon.getAllFiducials());
     SmartDashboard.putNumberArray("visible ficuials", m_photon.getAllFiducials().stream().mapToDouble(i -> i.doubleValue()).toArray());
