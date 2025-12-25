@@ -23,6 +23,7 @@ import org.photonvision.targeting.PhotonPipelineResult;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -82,9 +83,18 @@ public class VisionCamera extends SubsystemBase {
     // zero out vars to recalculate avg distance and std devs
     Matrix<N3, N1> stddevs = k_ignorestddevs;
     int numTags = result.targets.size();
+    double avgDist = 0.0;
+
+    // calculate average target distance
+    for (var target : result.targets) {
+      Optional<Pose3d> target_pose = m_estimator.getFieldTags().getTagPose(target.fiducialId);
+      if (target_pose.isEmpty()) continue;
+      avgDist += target_pose.get().toPose2d().getTranslation().getDistance(estimate.estimatedPose.toPose2d().getTranslation());
+    }
+    avgDist /= numTags;
 
     // heuristic logic
-    if (numTags > 1) {
+    if (numTags > 1 && avgDist < 6) {
       stddevs = k_multitagstddevs;
     }
     else if (numTags == 1)

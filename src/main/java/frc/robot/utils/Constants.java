@@ -22,9 +22,12 @@ import edu.wpi.first.math.util.Units;
 /** Add your docs here. */
 public class Constants {
     public class SwerveDriveConstants {
+        public static final double k_mass = Units.lbsToKilograms(125);
         public static final double k_wheelradius = Units.inchesToMeters(2);
         public static final double k_wheelcircumference = 2 * Math.PI * k_wheelradius;
         public static final double k_trackwidth = Units.inchesToMeters(24); // need to update with proper distance to center
+        public static final double k_moduleradius = Math.hypot(k_trackwidth / 2, k_trackwidth / 2);
+        public static final double k_MOI = 0.5 * k_mass * Math.pow(k_moduleradius, 2);
         public static final double k_drivegearratio = 5.27;
         public static final double k_turngearratio = 26;
         public static final double k_drivemotormaxRPM = 6784;
@@ -86,9 +89,8 @@ public class Constants {
 
         public static final List<Integer> k_tagblacklist = Arrays.asList(3, 16);
 
-        public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(2, 2, Double.MAX_VALUE);
-        public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.5, 0.5, Double.MAX_VALUE);
-        public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE,
-                Double.MAX_VALUE);
+        public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(4, 4, 4);
+        public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.5, 0.5, 0.5);
+        public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
     }
 }

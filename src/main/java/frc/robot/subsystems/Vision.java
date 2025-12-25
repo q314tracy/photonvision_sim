@@ -21,7 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
-public class Photon extends SubsystemBase {
+public class Vision extends SubsystemBase {
 
   // camera abstraction objects
   private final VisionCamera m_frontleft_camera;
@@ -33,7 +33,7 @@ public class Photon extends SubsystemBase {
   // simulation stuff
   private VisionSystemSim m_visionsim;
 
-  public Photon() {
+  public Vision() {
 
     // cameras
     m_frontleft_camera = new VisionCamera("frontleft_camera", k_frontleftcameraintrinsics);
@@ -91,7 +91,7 @@ public class Photon extends SubsystemBase {
    * @param pose The odometric pose of the robot.
    */
   public void updatePose(Pose2d pose) {
-    if (RobotBase.isSimulation()) m_visionsim.update(pose);
+    m_visionsim.update(pose);
   }
 
   @Override

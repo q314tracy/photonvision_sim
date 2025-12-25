@@ -11,15 +11,18 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.Photon;
+import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.Swerve;
 
 public class Telemetry extends SubsystemBase {
 
-  private final Photon m_photon;
+  private final Vision m_photon;
   private final Swerve m_swerve;
 
   private final Field2d m_field;
@@ -28,10 +31,14 @@ public class Telemetry extends SubsystemBase {
   private List<Integer> displayed_tags = new ArrayList<>();
   private List<Integer> removed_tags = new ArrayList<>();
 
-  public Telemetry(Photon photon, Swerve swerve) {
+  private final StructPublisher<Translation2d> m_simdeviationpublisher = NetworkTableInstance.getDefault()
+      .getStructTopic("simulation pose deviation", Translation2d.struct)
+      .publish();
+
+  public Telemetry(Vision photon, Swerve swerve) {
     m_photon = photon;
     m_swerve = swerve;
-    
+
     m_taglayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
 
     m_field = m_swerve.getField2d();
@@ -76,11 +83,18 @@ public class Telemetry extends SubsystemBase {
     removed_tags.clear();
   }
 
-
   @Override
   public void periodic() {
     // add fiducial ids to visualization
     addFiducialstoField(m_photon.getAllFiducials());
-    SmartDashboard.putNumberArray("visible ficuials", m_photon.getAllFiducials().stream().mapToDouble(i -> i.doubleValue()).toArray());
+    SmartDashboard.putNumberArray(
+        "visible ficuials",
+        m_photon.getAllFiducials()
+            .stream()
+            .mapToDouble(i -> i.doubleValue())
+            .toArray());
+
+    // add pose deviation measurement
+    m_simdeviationpublisher.accept(m_swerve.getPose().minus(m_swerve.getSimPose()).getTranslation());
   }
 }
