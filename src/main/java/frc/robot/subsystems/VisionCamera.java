@@ -38,6 +38,8 @@ public class VisionCamera extends SubsystemBase {
 
   private Optional<PhotonPipelineResult> results = Optional.empty();
   private Pair<Optional<EstimatedRobotPose>, Matrix<N3, N1>> estimate = Pair.of(Optional.empty(), k_ignorestddevs);
+  private List<Integer> fiducials = new ArrayList<>();
+
 
   public VisionCamera(String name, Transform3d intrinsics) {
 
@@ -50,26 +52,26 @@ public class VisionCamera extends SubsystemBase {
 
     if (RobotBase.isSimulation()) {
       SimCameraProperties camerasim_properties = new SimCameraProperties();
-      camerasim_properties.setFPS(30);
+      camerasim_properties.setFPS(10);
       m_camerasim = new PhotonCameraSim(m_camera, camerasim_properties);
-      m_camerasim.enableRawStream(false);
-      m_camerasim.enableDrawWireframe(false);
+      m_camerasim.enableRawStream(true);
+      m_camerasim.enableDrawWireframe(true);
     }
   }
 
   /**
-   * Used to update visible fiducials in Telemetry.
+   * Returns a list of the current visible fiducials.
    * 
    * @return List of integers containing the visible targets in the results.
    */
-  public List<Integer> getFiducials() {
-    List<Integer> visible_fiducials = new ArrayList<>(); // also clears list
+  public List<Integer> getFiducialIDs() {
+    fiducials.clear();
     results.ifPresent(res -> {
       for (var target : res.targets) {
-        visible_fiducials.add(target.fiducialId);
+        fiducials.add(target.fiducialId);
       }
     });
-    return visible_fiducials;
+    return fiducials;
   }
 
   /**
@@ -94,13 +96,10 @@ public class VisionCamera extends SubsystemBase {
     avgDist /= numTags;
 
     // heuristic logic
-    if (numTags > 1 && avgDist < 6) {
+    if (numTags > 1 && avgDist < 4) {
       stddevs = k_multitagstddevs;
-    }
-    else if (numTags == 1)
+    } else
       stddevs = k_singletagstddevs;
-    else
-      stddevs = k_ignorestddevs;
 
     // return the composed std devs
     return stddevs;

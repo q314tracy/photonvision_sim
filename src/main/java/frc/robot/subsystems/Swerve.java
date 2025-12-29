@@ -13,7 +13,6 @@ import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
@@ -22,6 +21,7 @@ import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
@@ -91,7 +91,6 @@ public class Swerve extends SubsystemBase {
         },
         this // Reference to this subsystem to set requirements
     );
-    PathfindingCommand.warmupCommand().schedule();
   }
 
   /** Returns the current swerve drive instance. */
@@ -117,6 +116,10 @@ public class Swerve extends SubsystemBase {
     return m_swervedrive.getPose();
   }
 
+  public Rotation2d getGyroHeading() {
+    return m_swervedrive.getYaw();
+  }
+
   /** Returns the sim factory pose. Use only in simulation to update the vision sim factory. */
   public Pose2d getSimPose() {
     if (m_swervedrive.getSimulationDriveTrainPose().isPresent()) {
@@ -134,11 +137,11 @@ public class Swerve extends SubsystemBase {
       });
     }
   }
-
-  /** Returns a PP command to drive  */
-  public Command pathfindToPose(Pose2d pose) {
+  
+  /** Pathfinds to a specifed pose. */
+  public Command pathfindToPose(Pose2d targetpose) {
     return AutoBuilder.pathfindToPose(
-      pose,
+      targetpose,
       PathConstraints.unlimitedConstraints(12));
   }
 

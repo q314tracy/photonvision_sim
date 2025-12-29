@@ -6,10 +6,13 @@ package frc.robot.subsystems;
 
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.targeting.PhotonPipelineResult;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -17,18 +20,15 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import static frc.robot.utils.Constants.VisionConstants.*;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
 public class Vision extends SubsystemBase {
 
-  // camera abstraction objects
-  private final VisionCamera m_frontleft_camera;
-  private final VisionCamera m_frontcenter_camera;
-  private final VisionCamera m_frontright_camera;
-  private final VisionCamera m_rearleft_camera;
-  private final VisionCamera m_rearright_camera;
+  /** Cameras. */
+  private final List<VisionCamera> m_cameras;
 
   // simulation stuff
   private VisionSystemSim m_visionsim;
@@ -36,59 +36,99 @@ public class Vision extends SubsystemBase {
   public Vision() {
 
     // cameras
-    m_frontleft_camera = new VisionCamera("frontleft_camera", k_frontleftcameraintrinsics);
-    m_frontcenter_camera = new VisionCamera("frontcenter_camera", k_frontcentercameraintrinsics);
-    m_frontright_camera = new VisionCamera("frontright_camera", k_frontrightcameraintrinsics);
-    m_rearleft_camera = new VisionCamera("rearleft_camera", k_rearleftcameraintrinsics);
-    m_rearright_camera = new VisionCamera("rearright_camera", k_rearrightcameraintrinsics);
+    m_cameras = List.of(
+        new VisionCamera("frontleft_camera", k_frontleftcameraintrinsics),
+        new VisionCamera("frontcenter_camera", k_frontcentercameraintrinsics),
+        new VisionCamera("frontright_camera", k_frontrightcameraintrinsics),
+        new VisionCamera("rearleft_camera", k_rearleftcameraintrinsics),
+        new VisionCamera("rearright_camera", k_rearrightcameraintrinsics));
 
     // IT'S SIMULATIN TIME
     if (RobotBase.isSimulation()) {
 
       // declare vision sim, add cameras, add fiducials
       m_visionsim = new VisionSystemSim("main");
-      m_visionsim.addCamera(m_frontleft_camera.getSimInstance(), k_frontleftcameraintrinsics);
-      m_visionsim.addCamera(m_frontcenter_camera.getSimInstance(), k_frontcentercameraintrinsics);
-      m_visionsim.addCamera(m_frontright_camera.getSimInstance(), k_frontrightcameraintrinsics);
-      m_visionsim.addCamera(m_rearleft_camera.getSimInstance(), k_rearleftcameraintrinsics);
-      m_visionsim.addCamera(m_rearright_camera.getSimInstance(), k_rearrightcameraintrinsics);
+      m_visionsim.addCamera(m_cameras.get(0).getSimInstance(), k_frontleftcameraintrinsics);
+      m_visionsim.addCamera(m_cameras.get(1).getSimInstance(), k_frontcentercameraintrinsics);
+      m_visionsim.addCamera(m_cameras.get(2).getSimInstance(), k_frontrightcameraintrinsics);
+      m_visionsim.addCamera(m_cameras.get(3).getSimInstance(), k_rearleftcameraintrinsics);
+      m_visionsim.addCamera(m_cameras.get(4).getSimInstance(), k_rearrightcameraintrinsics);
       m_visionsim.addAprilTags(k_fieldlayout);
     }
   }
 
   /** Get a list of all of the estimates from the camera pipelines. */
-  public List<Pair<Optional<EstimatedRobotPose>,Matrix<N3,N1>>> getEstimates() {
-    return List.of(
-      m_frontleft_camera.getEstimate(),
-      m_frontcenter_camera.getEstimate(),
-      m_frontright_camera.getEstimate(),
-      m_rearleft_camera.getEstimate(),
-      m_rearright_camera.getEstimate()
-    );
+  public List<Pair<Optional<EstimatedRobotPose>, Matrix<N3, N1>>> getEstimates() {
+    List<Pair<Optional<EstimatedRobotPose>, Matrix<N3, N1>>> estimates = new ArrayList<>();
+    for (var camera : m_cameras) {
+      if (camera.getEstimate().getFirst().isPresent()) {
+        estimates.add(camera.getEstimate());
+      }
+    }
+    return estimates;
   }
 
-  
+  /** Get a list of all the results from the camera pipelines. */
+  public List<Optional<PhotonPipelineResult>> getResults() {
+    List<Optional<PhotonPipelineResult>> results = new ArrayList<>();
+    for (var camera : m_cameras) {
+      if (camera.getResults().isPresent()) {
+        results.add(camera.getResults());
+      }
+    }
+    return results;
+  }
 
   /** Returns a list containing all the visible fiducial IDs. */
-  public List<Integer> getAllFiducials() {
+  public List<Integer> getAllFiducialIDs() {
+    HashSet<Integer> fiducials = new HashSet<>();
+    for (var camera : m_cameras) {
+      fiducials.addAll(camera.getFiducialIDs());
+    }
+    return fiducials.stream().toList();
+  }
 
-    // compose the set of fiducials
-    // using a hashset automatically removes duplicate entries
-    HashSet<Integer> set = new HashSet<>();
-    set.addAll(m_frontleft_camera.getFiducials());
-    set.addAll(m_frontcenter_camera.getFiducials());
-    set.addAll(m_frontright_camera.getFiducials());
-    set.addAll(m_rearleft_camera.getFiducials());
-    set.addAll(m_rearright_camera.getFiducials());
+  /** Gets the yaw of a specific target seen by a specific camera index.
+   * 
+   * @param fiducialID The ID of the fidicuial whose yaw is requested.
+   * @param cameraID The index of the camera to check for the fiducial.
+   * @return The yaw as a Rotation2d. Returns an empty Rotation2d if fiducial is not visible.
+  */
+  public Rotation2d getCameraTargetYaw(int fiducialID, int cameraID) {
+    Optional<PhotonPipelineResult> result = m_cameras.get(cameraID).getResults();
+    Rotation2d target_yaw = new Rotation2d();
+    if (result.isPresent()) {
+      for (var target : result.get().targets) {
+        if (target.fiducialId == fiducialID) {
+          target_yaw = Rotation2d.fromDegrees(target.getYaw());
+        }
+      }
+    }
+    return target_yaw;
+  }
 
-    // return the composed set converted back to a list
-    return set.stream().toList();
+  /** Returns the linear distance to the target. Target must be visible. */
+  public double getCameraTargetDistance(int fiducialID, int cameraID, Pose2d robotpose) {
+    Optional<PhotonPipelineResult> result = m_cameras.get(cameraID).getResults();
+    double target_distance = 0;
+    if (result.isPresent()) {
+      for (var target : result.get().targets) {
+        if (target.fiducialId == fiducialID) {
+          target_distance = target.getBestCameraToTarget().getTranslation().plus(k_frontcentercameraintrinsics.getTranslation()).getDistance(new Translation3d());
+        }
+      }
+    }
+    return target_distance;
+  }
+
+  public List<VisionCamera> getCameras() {
+    return m_cameras;
   }
 
   /**
    * Used to update the pose of the vision sim periodically.
    * 
-   * @param pose The odometric pose of the robot.
+   * @param pose The simulation's physical pose of the robot.
    */
   public void updatePose(Pose2d pose) {
     m_visionsim.update(pose);

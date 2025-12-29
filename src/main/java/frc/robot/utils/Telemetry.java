@@ -11,9 +11,6 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -30,10 +27,6 @@ public class Telemetry extends SubsystemBase {
 
   private List<Integer> displayed_tags = new ArrayList<>();
   private List<Integer> removed_tags = new ArrayList<>();
-
-  private final StructPublisher<Translation2d> m_simdeviationpublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("simulation pose deviation", Translation2d.struct)
-      .publish();
 
   public Telemetry(Vision photon, Swerve swerve) {
     m_photon = photon;
@@ -86,15 +79,14 @@ public class Telemetry extends SubsystemBase {
   @Override
   public void periodic() {
     // add fiducial ids to visualization
-    addFiducialstoField(m_photon.getAllFiducials());
+    addFiducialstoField(m_photon.getAllFiducialIDs());
     SmartDashboard.putNumberArray(
         "visible ficuials",
-        m_photon.getAllFiducials()
+        m_photon.getAllFiducialIDs()
             .stream()
-            .mapToDouble(i -> i.doubleValue())
+            .mapToDouble(i -> i)
             .toArray());
 
-    // add pose deviation measurement
-    m_simdeviationpublisher.accept(m_swerve.getPose().minus(m_swerve.getSimPose()).getTranslation());
+    SmartDashboard.putNumber("target distance", m_photon.getCameraTargetDistance(18, 1, m_swerve.getPose()));
   }
 }

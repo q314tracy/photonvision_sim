@@ -49,7 +49,7 @@ public class Constants {
                 Units.inchesToMeters(8),
                 new Rotation3d(
                         0,
-                        0,
+                        Units.degreesToRadians(-20),
                         Units.degreesToRadians(45)));
         public static final Transform3d k_frontcentercameraintrinsics = new Transform3d(
                 Units.inchesToMeters(12),
@@ -57,7 +57,7 @@ public class Constants {
                 Units.inchesToMeters(8),
                 new Rotation3d(
                         0,
-                        0,
+                        Units.degreesToRadians(0),
                         0));
         public static final Transform3d k_frontrightcameraintrinsics = new Transform3d(
                 Units.inchesToMeters(12),
@@ -65,7 +65,7 @@ public class Constants {
                 Units.inchesToMeters(8),
                 new Rotation3d(
                         0,
-                        0,
+                        Units.degreesToRadians(-20),
                         Units.degreesToRadians(-45)));
         public static final Transform3d k_rearleftcameraintrinsics = new Transform3d(
                 Units.inchesToMeters(-12),
@@ -73,7 +73,7 @@ public class Constants {
                 Units.inchesToMeters(8),
                 new Rotation3d(
                         0,
-                        0,
+                        Units.degreesToRadians(-20),
                         Units.degreesToRadians(135)));
         public static final Transform3d k_rearrightcameraintrinsics = new Transform3d(
                 Units.inchesToMeters(-12),
@@ -81,7 +81,7 @@ public class Constants {
                 Units.inchesToMeters(8),
                 new Rotation3d(
                         0,
-                        0,
+                        Units.degreesToRadians(-20),
                         Units.degreesToRadians(-135)));
 
         public static final AprilTagFieldLayout k_fieldlayout = AprilTagFieldLayout
@@ -89,8 +89,12 @@ public class Constants {
 
         public static final List<Integer> k_tagblacklist = Arrays.asList(3, 16);
 
-        public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(4, 4, 4);
-        public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.5, 0.5, 0.5);
+        public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(1, 1, 1);
+        public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.2, 0.2, 0.2);
         public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+    }
+
+    public static final class PathfindingConstants {
+        public static final Pose2d k_bluereefA = new Pose2d(1, 3.5, new Rotation2d(Units.degreesToRadians(0)));
     }
 }
