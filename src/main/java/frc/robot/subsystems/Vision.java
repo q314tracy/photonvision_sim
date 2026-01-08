@@ -27,32 +27,25 @@ import java.util.Optional;
 
 public class Vision extends SubsystemBase {
 
-  /** Cameras. */
-  private final List<VisionCamera> m_cameras;
+  /** Cameraaaaaaas. */
+  private final List<VisionCamera> m_cameras = new ArrayList<>();
 
-  // simulation stuff
   private VisionSystemSim m_visionsim;
 
   public Vision() {
 
-    // cameras
-    m_cameras = List.of(
-        new VisionCamera("frontleft_camera", k_frontleftcameraintrinsics),
-        new VisionCamera("frontcenter_camera", k_frontcentercameraintrinsics),
-        new VisionCamera("frontright_camera", k_frontrightcameraintrinsics),
-        new VisionCamera("rearleft_camera", k_rearleftcameraintrinsics),
-        new VisionCamera("rearright_camera", k_rearrightcameraintrinsics));
+    // iterate to instantiate cameras
+    for (int num = 0; num < k_cameranames.size(); num++) {
+      m_cameras.add(new VisionCamera(k_cameranames.get(num), k_cameraintrinsics.get(num)));
+    }
 
     // IT'S SIMULATIN TIME
+    // declare vision sim, iterate and add cameras, add fiducials to sim field
     if (RobotBase.isSimulation()) {
-
-      // declare vision sim, add cameras, add fiducials
       m_visionsim = new VisionSystemSim("main");
-      m_visionsim.addCamera(m_cameras.get(0).getSimInstance(), k_frontleftcameraintrinsics);
-      m_visionsim.addCamera(m_cameras.get(1).getSimInstance(), k_frontcentercameraintrinsics);
-      m_visionsim.addCamera(m_cameras.get(2).getSimInstance(), k_frontrightcameraintrinsics);
-      m_visionsim.addCamera(m_cameras.get(3).getSimInstance(), k_rearleftcameraintrinsics);
-      m_visionsim.addCamera(m_cameras.get(4).getSimInstance(), k_rearrightcameraintrinsics);
+      for (int num = 0; num < m_cameras.size(); num++) {
+        m_visionsim.addCamera(m_cameras.get(num).getSimInstance(), k_cameraintrinsics.get(num));
+      }
       m_visionsim.addAprilTags(k_fieldlayout);
     }
   }
@@ -107,26 +100,31 @@ public class Vision extends SubsystemBase {
     return target_yaw;
   }
 
-  /** Returns the linear distance to the target. Target must be visible. */
-  public double getCameraTargetDistance(int fiducialID, int cameraID, Pose2d robotpose) {
+  /** Returns the linear distance to the target. Target must be visible or it will return a distance of zero.
+   * 
+   * @param fiducialID The ID of the fiducial.
+   * @param cameraID The ID of the camera where the fiducial is visible.
+   * @return
+   */
+  public double getCameraTargetDistance(int fiducialID, int cameraID) {
     Optional<PhotonPipelineResult> result = m_cameras.get(cameraID).getResults();
     double target_distance = 0;
     if (result.isPresent()) {
       for (var target : result.get().targets) {
         if (target.fiducialId == fiducialID) {
-          target_distance = target.getBestCameraToTarget().getTranslation().plus(k_frontcentercameraintrinsics.getTranslation()).getDistance(new Translation3d());
+          target_distance = target.getBestCameraToTarget().getTranslation().plus(k_cameraintrinsics.get(cameraID).getTranslation()).getDistance(new Translation3d());
         }
       }
     }
     return target_distance;
   }
 
+  /** Returns a list of the vision system camera instances. */
   public List<VisionCamera> getCameras() {
     return m_cameras;
   }
 
-  /**
-   * Used to update the pose of the vision sim periodically.
+  /** Used to update the pose of the vision sim periodically.
    * 
    * @param pose The simulation's physical pose of the robot.
    */

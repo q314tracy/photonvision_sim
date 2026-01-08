@@ -120,6 +120,11 @@ public class VisionCamera extends SubsystemBase {
     return m_camerasim;
   }
 
+  /** Returns a boolean with the connection status of the camera. */
+  public boolean isConnected() {
+    return m_camera.isConnected();
+  }
+
   @Override
   public void periodic() {
 

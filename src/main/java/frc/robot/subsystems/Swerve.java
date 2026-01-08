@@ -44,8 +44,8 @@ public class Swerve extends SubsystemBase {
     // attempt construction of YAGSL swerve object
     try {
       m_swervedrive = new SwerveParser(
-        new File(Filesystem.getDeployDirectory(), "swerve"))
-        .createSwerveDrive(k_maxlinspeed, k_initpose);
+          new File(Filesystem.getDeployDirectory(), "swerve"))
+          .createSwerveDrive(k_maxlinspeed, k_initpose);
     } catch (Exception e) {
       // throw exception if directory is invalid
       throw new RuntimeException(e);
@@ -63,15 +63,19 @@ public class Swerve extends SubsystemBase {
     }
   }
 
-  /** Configures the PP AutoBuilder with the robot intrinsics. Call before constructing any autos.*/
+  /**
+   * Configures the PP AutoBuilder with the robot intrinsics. Call before
+   * constructing any autos.
+   */
   public void runAutoBuilder() {
-       AutoBuilder.configure(
+    AutoBuilder.configure(
         m_swervedrive::getPose, // Robot pose supplier
         m_swervedrive::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
         m_swervedrive::getRobotVelocity, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-        (speeds, feedforwards) -> m_swervedrive.drive(speeds, false, new Translation2d()), // Method that will drive the robot given ROBOT RELATIVE
-                                                     // ChassisSpeeds. Also optionally outputs individual module
-                                                     // feedforwards
+        (speeds, feedforwards) -> m_swervedrive.drive(speeds, false, new Translation2d()), // Method that will drive the
+                                                                                           // robot given ROBOT RELATIVE
+        // ChassisSpeeds. Also optionally outputs individual module
+        // feedforwards
         new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic
                                         // drive trains
             new PIDConstants(8, 0.0, 0.0), // Translation PID constants
@@ -105,6 +109,7 @@ public class Swerve extends SubsystemBase {
 
   /**
    * Basic field oriented driving method.
+   * 
    * @param speeds Composed field-relative speeds.
    */
   public void drive(ChassisSpeeds speeds) {
@@ -120,7 +125,10 @@ public class Swerve extends SubsystemBase {
     return m_swervedrive.getYaw();
   }
 
-  /** Returns the sim factory pose. Use only in simulation to update the vision sim factory. */
+  /**
+   * Returns the sim factory pose. Use only in simulation to update the vision sim
+   * factory.
+   */
   public Pose2d getSimPose() {
     if (m_swervedrive.getSimulationDriveTrainPose().isPresent()) {
       return m_swervedrive.getSimulationDriveTrainPose().get();
@@ -130,19 +138,34 @@ public class Swerve extends SubsystemBase {
   }
 
   /** Adds the current queue of vision measurements to the pose estimator. */
-  public void addVisionMeasurements(List<Pair<Optional<EstimatedRobotPose>,Matrix<N3,N1>>> estimates) {
+  public void addVisionMeasurements(List<Pair<Optional<EstimatedRobotPose>, Matrix<N3, N1>>> estimates) {
     for (var estimate : estimates) {
       estimate.getFirst().ifPresent(est -> {
         m_swervedrive.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, estimate.getSecond());
       });
     }
   }
-  
-  /** Pathfinds to a specifed pose. */
-  public Command pathfindToPose(Pose2d targetpose) {
-    return AutoBuilder.pathfindToPose(
-      targetpose,
-      PathConstraints.unlimitedConstraints(12));
+
+  /** Pathfinds to a specifed pose.
+   * 
+   * @param targetpose The pose to pathfind to.
+   * @param unlimited Pass true if unlimited constraints are requested.
+   * @return The composed pathfinding command.
+   */
+  public Command pathfindToPose(Pose2d targetpose, boolean unlimited) {
+    if (unlimited) {
+      return AutoBuilder.pathfindToPose(
+          targetpose,
+          PathConstraints.unlimitedConstraints(12));
+    } else {
+      return AutoBuilder.pathfindToPose(
+          targetpose,
+          new PathConstraints(
+              3,
+              6,
+              Math.PI * 4,
+              Math.PI * 8));
+    }
   }
 
   @Override

@@ -5,9 +5,6 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -22,12 +19,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.Swerve;
 import frc.robot.utils.Telemetry;
-import frc.robot.utils.Constants.VisionConstants;
 
 import static frc.robot.utils.Constants.OIConstants.*;
 import static frc.robot.utils.Constants.PathfindingConstants.*;
-
-import java.util.Optional;
 
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
@@ -93,34 +87,8 @@ public class RobotContainer {
   /** Autoalign sequence for the reef. */
   private SequentialCommandGroup autoAlignReef(int fiducialID) {
     return new SequentialCommandGroup(
-        m_swerve.pathfindToPose(k_bluereefA)
-            .until(() -> m_vision.getCameras().get(1).getFiducialIDs().contains(fiducialID)),
-        autoAlign(fiducialID));
-  }
-
-  /**
-   * Autoalign subroutine.
-   * 
-   * @param fiducialID the ID of the tag of which to align to. Must be visible at
-   *                   start of call.
-   */
-  private Command autoAlign(int fiducialID) {
-    PIDController heading_pid = new PIDController(5, 0, 0);
-    PIDController translateY_pid = new PIDController(30, 0, 0);
-    Optional<Pose3d> fiducial_pose = VisionConstants.k_fieldlayout.getTagPose(fiducialID);
-    Rotation2d fiducial_heading = fiducial_pose.isPresent() ? fiducial_pose.get().getRotation().toRotation2d() : new Rotation2d();
-    return run(() -> m_swerve.drive(new ChassisSpeeds(
-        1,
-        translateY_pid.calculate(
-            m_vision.getCameraTargetYaw(fiducialID, 1).getRotations()),
-        heading_pid.calculate(
-            m_swerve.getGyroHeading().getRadians(),
-            MathUtil.angleModulus(fiducial_heading.getRadians() - Math.PI)))),
-        m_swerve)
-        .until(() -> m_vision.getCameraTargetDistance(fiducialID, 1, m_swerve.getPose()) < 1)
-        .finallyDo(() -> sequence(
-            runOnce(() -> heading_pid.close()),
-            runOnce(() -> translateY_pid.close())));
+        m_swerve.pathfindToPose(k_bluereefA, true),
+        m_swerve.pathfindToPose(k_redreefA, true));
   }
 
   /** The selected autonomous command. */

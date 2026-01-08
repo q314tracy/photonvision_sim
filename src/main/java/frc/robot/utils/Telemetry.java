@@ -7,8 +7,6 @@ package frc.robot.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -16,6 +14,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.Swerve;
+import static frc.robot.utils.Constants.VisionConstants.*;
 
 public class Telemetry extends SubsystemBase {
 
@@ -23,7 +22,6 @@ public class Telemetry extends SubsystemBase {
   private final Swerve m_swerve;
 
   private final Field2d m_field;
-  private final AprilTagFieldLayout m_taglayout;
 
   private List<Integer> displayed_tags = new ArrayList<>();
   private List<Integer> removed_tags = new ArrayList<>();
@@ -31,8 +29,6 @@ public class Telemetry extends SubsystemBase {
   public Telemetry(Vision photon, Swerve swerve) {
     m_photon = photon;
     m_swerve = swerve;
-
-    m_taglayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
 
     m_field = m_swerve.getField2d();
   }
@@ -46,8 +42,8 @@ public class Telemetry extends SubsystemBase {
         if (!displayed_tags.contains(fiducial)) {
           // add the tag if yiss
           m_field.getObject("AprilTag " + fiducial).setPose(
-              m_taglayout.getTagPose(fiducial).get().getX(),
-              m_taglayout.getTagPose(fiducial).get().getY(),
+              k_fieldlayout.getTagPose(fiducial).get().getX(),
+              k_fieldlayout.getTagPose(fiducial).get().getY(),
               new Rotation2d());
           // record that we added it
           displayed_tags.add(fiducial);
@@ -86,7 +82,5 @@ public class Telemetry extends SubsystemBase {
             .stream()
             .mapToDouble(i -> i)
             .toArray());
-
-    SmartDashboard.putNumber("target distance", m_photon.getCameraTargetDistance(18, 1, m_swerve.getPose()));
   }
 }
