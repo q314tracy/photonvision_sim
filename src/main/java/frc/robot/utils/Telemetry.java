@@ -10,15 +10,12 @@ import java.util.List;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.Swerve;
-import static frc.robot.utils.Constants.VisionConstants.*;
+import static frc.robot.utils.Constants.PhotonVisionConstants.*;
 
 public class Telemetry extends SubsystemBase {
 
-  private final Vision m_photon;
   private final Swerve m_swerve;
 
   private final Field2d m_field;
@@ -26,8 +23,7 @@ public class Telemetry extends SubsystemBase {
   private List<Integer> displayed_tags = new ArrayList<>();
   private List<Integer> removed_tags = new ArrayList<>();
 
-  public Telemetry(Vision photon, Swerve swerve) {
-    m_photon = photon;
+  public Telemetry(Swerve swerve) {
     m_swerve = swerve;
 
     m_field = m_swerve.getField2d();
@@ -74,13 +70,5 @@ public class Telemetry extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // add fiducial ids to visualization
-    addFiducialstoField(m_photon.getAllFiducialIDs());
-    SmartDashboard.putNumberArray(
-        "visible ficuials",
-        m_photon.getAllFiducialIDs()
-            .stream()
-            .mapToDouble(i -> i)
-            .toArray());
   }
 }

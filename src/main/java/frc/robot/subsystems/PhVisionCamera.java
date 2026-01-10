@@ -4,10 +4,7 @@
 
 package frc.robot.subsystems;
 
-import static frc.robot.utils.Constants.VisionConstants.k_fieldlayout;
-import static frc.robot.utils.Constants.VisionConstants.k_ignorestddevs;
-import static frc.robot.utils.Constants.VisionConstants.k_multitagstddevs;
-import static frc.robot.utils.Constants.VisionConstants.k_singletagstddevs;
+import static frc.robot.utils.Constants.PhotonVisionConstants.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +27,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class VisionCamera extends SubsystemBase {
+public class PhVisionCamera extends SubsystemBase {
 
   private final PhotonCamera m_camera;
   private final PhotonPoseEstimator m_estimator;
@@ -41,7 +38,7 @@ public class VisionCamera extends SubsystemBase {
   private List<Integer> fiducials = new ArrayList<>();
 
 
-  public VisionCamera(String name, Transform3d intrinsics) {
+  public PhVisionCamera(String name, Transform3d intrinsics) {
 
     m_camera = new PhotonCamera(name);
     m_estimator = new PhotonPoseEstimator(

@@ -40,7 +40,7 @@ public class Constants {
     public static final double k_maxrotspeedteleop = 2 * Math.PI;
   }
 
-  public class VisionConstants {
+  public class PhotonVisionConstants {
 
     // list of camera instrinsics
     public static final List<Transform3d> k_cameraintrinsics = List.of(
@@ -103,6 +103,13 @@ public class Constants {
     public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(1, 1, 1);
     public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.2, 0.2, 0.2);
     public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+  }
+
+  public static final class LLVisionConstants {
+    public static final List<String> k_LLcameras = List.of(
+      "front_camera",
+      "rear_camera"
+    );
   }
 
   public static final class PathfindingConstants {

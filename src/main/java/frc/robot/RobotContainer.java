@@ -6,17 +6,14 @@ package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.Swerve;
 import frc.robot.utils.Telemetry;
 
@@ -31,8 +28,7 @@ public class RobotContainer {
   // objects
   private final CommandXboxController m_joystick = new CommandXboxController(k_joystickport);
   private final Swerve m_swerve = new Swerve();
-  private final Vision m_vision = new Vision();
-  private final Telemetry m_telemetry = new Telemetry(m_vision, m_swerve);
+  private final Telemetry m_telemetry = new Telemetry(m_swerve);
 
   // autochooser
   private final SendableChooser<Command> m_autochooser = new SendableChooser<>();
@@ -50,7 +46,6 @@ public class RobotContainer {
 
     // default commands for subsystems
     m_swerve.setDefaultCommand(swerveDefaultCommand());
-    m_vision.setDefaultCommand(visionDefaultCommand());
 
     // configure bindings
     configureBindings();
@@ -61,27 +56,20 @@ public class RobotContainer {
     m_joystick.back().onTrue(runOnce(() -> m_swerve.getCurrentCommand().cancel()));
   }
 
-  /**
-   * Composed default command for photon vision subsystem. Do not interrupt or bad
-   * things happen.
-   */
-  private ParallelCommandGroup visionDefaultCommand() {
-    ParallelCommandGroup cmd = new ParallelCommandGroup();
-    if (RobotBase.isSimulation())
-      cmd.addCommands(run(() -> m_vision.updatePose(m_swerve.getSimPose())));
-    cmd.addCommands(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
-    cmd.addRequirements(m_vision);
-    return cmd;
-  }
-
   /** Composed default command for swerve subsystem. */
-  private Command swerveDefaultCommand() {
-    return new RunCommand(
+  private ParallelCommandGroup swerveDefaultCommand() {
+    ParallelCommandGroup cmd = new ParallelCommandGroup(
+      run(
         () -> m_swerve.drive(new ChassisSpeeds(
             MathUtil.applyDeadband(m_joystick.getLeftX(), 0.2) * k_maxlinspeedteleop,
             -MathUtil.applyDeadband(m_joystick.getLeftY(), 0.2) * k_maxlinspeedteleop,
             -MathUtil.applyDeadband(m_joystick.getRightX(), 0.2) * k_maxrotspeedteleop)),
-        m_swerve);
+        m_swerve
+      ),
+      run(() -> m_swerve.addLLVisionMeasurements())
+    );
+
+    return cmd;
   }
 
   /** Autoalign sequence for the reef. */

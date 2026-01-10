@@ -18,25 +18,25 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import static frc.robot.utils.Constants.VisionConstants.*;
+import static frc.robot.utils.Constants.PhotonVisionConstants.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
-public class Vision extends SubsystemBase {
+public class PhVision extends SubsystemBase {
 
   /** Cameraaaaaaas. */
-  private final List<VisionCamera> m_cameras = new ArrayList<>();
+  private final List<PhVisionCamera> m_cameras = new ArrayList<>();
 
   private VisionSystemSim m_visionsim;
 
-  public Vision() {
+  public PhVision() {
 
     // iterate to instantiate cameras
     for (int num = 0; num < k_cameranames.size(); num++) {
-      m_cameras.add(new VisionCamera(k_cameranames.get(num), k_cameraintrinsics.get(num)));
+      m_cameras.add(new PhVisionCamera(k_cameranames.get(num), k_cameraintrinsics.get(num)));
     }
 
     // IT'S SIMULATIN TIME
@@ -120,7 +120,7 @@ public class Vision extends SubsystemBase {
   }
 
   /** Returns a list of the vision system camera instances. */
-  public List<VisionCamera> getCameras() {
+  public List<PhVisionCamera> getCameras() {
     return m_cameras;
   }
 
